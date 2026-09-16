@@ -6,49 +6,58 @@ use Inertia\Testing\AssertableInertia as Assert;
 use Spatie\Permission\Models\Permission;
 use Spatie\Permission\Models\Role;
 
-test('users without permissions.view cannot list permissions', function () {
-    $this->actingAs(userWithPermissions(['roles.view']))
-        ->get(route('admin.permissions.index'))
+test('users need roles.view or permissions.view to open the roles & permissions page', function () {
+    $this->actingAs(userWithPermissions(['users.view']))
+        ->get(route('admin.roles.index'))
         ->assertForbidden();
 });
 
-test('permissions can be listed, searched and filtered by resource', function () {
+test('the page only sends the sections the user may view', function () {
+    $this->actingAs(userWithPermissions(['permissions.view'], 'Auditor'))
+        ->get(route('admin.roles.index'))
+        ->assertOk()
+        ->assertInertia(fn (Assert $page) => $page
+            ->component('admin/roles/index')
+            ->where('roles', null)
+            ->has('permissions', 9),
+        );
+
+    $this->actingAs(userWithPermissions(['roles.view'], 'Role Viewer'))
+        ->get(route('admin.roles.index'))
+        ->assertInertia(fn (Assert $page) => $page
+            ->where('permissions', null)
+            ->has('roles.data', 3),
+        );
+});
+
+test('every permission is listed with its roles and direct users', function () {
     $viewer = userWithPermissions(['permissions.view'], 'Auditor');
     Permission::create(['name' => 'reports.export']);
     User::factory()->create()->givePermissionTo('reports.export');
 
     $this->actingAs($viewer)
-        ->get(route('admin.permissions.index'))
+        ->get(route('admin.roles.index'))
         ->assertInertia(fn (Assert $page) => $page
-            ->component('admin/permissions/index')
-            ->has('permissions.data', 10)
-            ->where('resources', ['permissions', 'reports', 'roles', 'users']),
+            ->has('permissions', 10)
+            ->where('permissions.1.name', 'reports.export')
+            ->where('permissions.1.resource', 'reports')
+            ->where('permissions.1.action', 'export')
+            ->where('permissions.1.users_count', 1)
+            ->where('permissions.1.roles', [])
+            ->where('permissions.0.name', 'permissions.view')
+            ->where('permissions.0.roles', ['Admin', 'Auditor']),
         );
+});
 
-    $this->actingAs($viewer)
-        ->get(route('admin.permissions.index', ['resource' => 'reports']))
-        ->assertInertia(fn (Assert $page) => $page
-            ->has('permissions.data', 1)
-            ->where('permissions.data.0.name', 'reports.export')
-            ->where('permissions.data.0.resource', 'reports')
-            ->where('permissions.data.0.action', 'export')
-            ->where('permissions.data.0.users_count', 1)
-            ->where('permissions.data.0.roles', []),
-        );
-
-    $this->actingAs($viewer)
-        ->get(route('admin.permissions.index', ['search' => 'roles.']))
-        ->assertInertia(fn (Assert $page) => $page
-            ->has('permissions.data', 4)
-            ->where('permissions.data.0.roles', ['Admin']),
-        );
+test('the separate permissions page no longer exists', function () {
+    $this->actingAs(createAdmin())->get('/admin/permissions')->assertNotFound();
 });
 
 test('permissions cannot be created, renamed or deleted over http, even by admins', function () {
     $admin = createAdmin();
     $permission = Permission::findByName('users.view');
 
-    $this->actingAs($admin)->post('/admin/permissions', ['name' => 'orders.approve'])->assertMethodNotAllowed();
+    $this->actingAs($admin)->post('/admin/permissions', ['name' => 'orders.approve'])->assertNotFound();
     $this->actingAs($admin)->put("/admin/permissions/{$permission->id}", ['name' => 'users.gone'])->assertNotFound();
     $this->actingAs($admin)->delete("/admin/permissions/{$permission->id}")->assertNotFound();
 

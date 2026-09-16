@@ -11,7 +11,7 @@ and Laravel's Gate. The system only knows about **users**, **roles** and
 | --------------- | ----------------------------------------------- | ------------------------------------------------------------------------------------------------- |
 | Permission list | `config/permissions.php`                        | The one canonical list, as `resource => [actions]`. It produces `resource.action` names.          |
 | Admin role      | `App\Authorization\SystemRole::ADMIN`           | Passes every Gate check. Can't be renamed, edited or deleted. There is always at least one Admin. |
-| Custom roles    | Database                                        | Created at runtime under **Administration → Roles**. There is no role enum.                       |
+| Custom roles    | Database                                        | Created at runtime under **Administration → Roles & permissions**. There is no role enum.         |
 | Delegation      | `App\Authorization\PermissionDelegation`        | Non-admins can only grant permissions they hold. Only an Admin can grant or remove Admin.         |
 | Naming rules    | `App\Authorization\PermissionRegistry::PATTERN` | `^[a-z][a-z0-9_]*\.[a-z][a-z0-9_]*$`, e.g. `reports.export` or `purchase_orders.approve`.         |
 
@@ -31,7 +31,7 @@ and Laravel's Gate. The system only knows about **users**, **roles** and
     php artisan permissions:sync
     ```
 
-    This is the only way permissions are created. The Permissions page is
+    This is the only way permissions are created. The Permissions view is
     read-only: there is no UI for creating, renaming or deleting them, because
     code depends on the exact names. Removing an entry from the config never
     deletes the permission. If a feature is retired, delete its permissions
@@ -74,7 +74,7 @@ and Laravel's Gate. The system only knows about **users**, **roles** and
     For a sidebar entry, add `permission: 'orders.view'` to its `NavItem`.
 
 Administrators can now build roles such as "Order Approver" from
-**Administration → Roles**. No other code changes are needed.
+**Administration → Roles & permissions**. No other code changes are needed.
 
 ## Security rules (enforced on the server)
 
@@ -95,6 +95,19 @@ Administrators can now build roles such as "Order Approver" from
   that don't follow `resource.action`.
 - **Atomic updates:** a user's roles and direct permissions are updated in one
   transaction.
+
+## Roles & permissions page
+
+`/admin/roles` combines everything on one page, with three views:
+
+- **Roles:** role cards, with create, edit and delete.
+- **Matrix:** which role has which permission.
+- **Permissions:** a read-only list of every permission, its roles and how many users hold it directly.
+
+The page opens for anyone with `roles.view` or `permissions.view`. The Roles
+and Matrix views need `roles.view`, and the Permissions view needs
+`permissions.view`. The server only sends the data for views the user may see.
+`?view=permissions` opens a specific view.
 
 ## Frontend data
 

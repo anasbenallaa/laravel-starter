@@ -1,6 +1,5 @@
 import {
     Home09Icon,
-    Key01Icon,
     UserGroupIcon,
     UserShield01Icon,
     Logout01Icon,
@@ -13,7 +12,6 @@ import {
 } from '@hugeicons/core-free-icons';
 import { router } from '@inertiajs/react';
 import { useMemo } from 'react';
-import PermissionController from '@/actions/App/Http/Controllers/Admin/PermissionController';
 import RoleController from '@/actions/App/Http/Controllers/Admin/RoleController';
 import UserController from '@/actions/App/Http/Controllers/Admin/UserController';
 import type { AppIcon } from '@/components/ui/icon';
@@ -42,8 +40,8 @@ export type SearchItem = {
     href?: string;
     /** Custom handler when the item is chosen (used for actions). */
     onSelect?: () => void;
-    /** Only listed when the user has this permission. */
-    permission?: string;
+    /** Only listed when the user has this permission (or any of these). */
+    permission?: string | string[];
 };
 
 /**
@@ -52,7 +50,7 @@ export type SearchItem = {
  */
 export function useSearchItems(): SearchItem[] {
     const { updateAppearance } = useAppearance();
-    const { can } = useAuthorization();
+    const { canAny } = useAuthorization();
 
     return useMemo<SearchItem[]>(
         () =>
@@ -91,26 +89,21 @@ export function useSearchItems(): SearchItem[] {
                 },
                 {
                     id: 'admin.roles',
-                    title: 'Roles',
-                    group: 'Administration',
-                    badge: 'Admin',
-                    description: 'Create and edit roles and their permissions',
-                    keywords: ['rbac', 'access', 'groups'],
-                    icon: UserShield01Icon,
-                    href: RoleController.index.url(),
-                    permission: 'roles.view',
-                },
-                {
-                    id: 'admin.permissions',
-                    title: 'Permissions',
+                    title: 'Roles & permissions',
                     group: 'Administration',
                     badge: 'Admin',
                     description:
-                        'Manage the permissions roles and users can be granted',
-                    keywords: ['rbac', 'access', 'capabilities', 'abilities'],
-                    icon: Key01Icon,
-                    href: PermissionController.index.url(),
-                    permission: 'permissions.view',
+                        'Create and edit roles, and see every permission and who has it',
+                    keywords: [
+                        'rbac',
+                        'access',
+                        'groups',
+                        'matrix',
+                        'capabilities',
+                    ],
+                    icon: UserShield01Icon,
+                    href: RoleController.index.url(),
+                    permission: ['roles.view', 'permissions.view'],
                 },
                 {
                     id: 'nav.profile',
@@ -184,7 +177,15 @@ export function useSearchItems(): SearchItem[] {
                         router.post(logout().url);
                     },
                 },
-            ].filter((item) => !item.permission || can(item.permission)),
-        [updateAppearance, can],
+            ].filter(
+                (item) =>
+                    !item.permission ||
+                    canAny(
+                        Array.isArray(item.permission)
+                            ? item.permission
+                            : [item.permission],
+                    ),
+            ),
+        [updateAppearance, canAny],
     );
 }

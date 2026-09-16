@@ -1,11 +1,9 @@
 import {
     Home09Icon,
-    Key01Icon,
     UserGroupIcon,
     UserShield01Icon,
 } from '@hugeicons/core-free-icons';
 import { Link } from '@inertiajs/react';
-import PermissionController from '@/actions/App/Http/Controllers/Admin/PermissionController';
 import RoleController from '@/actions/App/Http/Controllers/Admin/RoleController';
 import UserController from '@/actions/App/Http/Controllers/Admin/UserController';
 import { useState } from 'react';
@@ -32,7 +30,7 @@ export function AppSidebar() {
     const dashboardUrl = dashboard();
     const { setOpenMobile } = useSidebar();
     const [searchOpen, setSearchOpen] = useState(false);
-    const { can } = useAuthorization();
+    const { canAny } = useAuthorization();
 
     // On mobile the sidebar is a sheet: close it once the user picks something.
     const closeMobile = () => setOpenMobile(false);
@@ -54,18 +52,18 @@ export function AppSidebar() {
             permission: 'users.view',
         },
         {
-            title: 'Roles',
+            title: 'Roles & permissions',
             href: RoleController.index(),
             icon: UserShield01Icon,
-            permission: 'roles.view',
+            permission: ['roles.view', 'permissions.view'],
         },
-        {
-            title: 'Permissions',
-            href: PermissionController.index(),
-            icon: Key01Icon,
-            permission: 'permissions.view',
-        },
-    ].filter((item) => can(item.permission));
+    ].filter((item) =>
+        canAny(
+            Array.isArray(item.permission)
+                ? item.permission
+                : [item.permission ?? ''],
+        ),
+    );
 
     return (
         <>

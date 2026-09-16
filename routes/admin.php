@@ -1,6 +1,5 @@
 <?php
 
-use App\Http\Controllers\Admin\PermissionController;
 use App\Http\Controllers\Admin\RoleController;
 use App\Http\Controllers\Admin\UserAccessController;
 use App\Http\Controllers\Admin\UserController;
@@ -19,8 +18,9 @@ Route::middleware(['auth', 'verified'])->prefix('admin')->name('admin.')->group(
         ->middleware('can:users.update')
         ->name('users.access.update');
 
+    // Roles & permissions page: requires roles.view or permissions.view,
+    // checked in the controller because middleware can't express "either".
     Route::get('roles', [RoleController::class, 'index'])
-        ->middleware('can:roles.view')
         ->name('roles.index');
     Route::get('roles/create', [RoleController::class, 'create'])
         ->middleware('can:roles.create')
@@ -37,8 +37,4 @@ Route::middleware(['auth', 'verified'])->prefix('admin')->name('admin.')->group(
     Route::delete('roles/{role}', [RoleController::class, 'destroy'])
         ->middleware('can:roles.delete')
         ->name('roles.destroy');
-
-    Route::get('permissions', [PermissionController::class, 'index'])
-        ->middleware('can:permissions.view')
-        ->name('permissions.index');
 });

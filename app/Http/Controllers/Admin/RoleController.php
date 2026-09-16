@@ -24,14 +24,20 @@ class RoleController extends Controller
     public function __construct(private PermissionDelegation $delegation) {}
 
     /**
-     * List roles with user and permission counts.
+     * The combined roles & permissions page. Open to anyone who can view roles
+     * or permissions; each section's data is only sent when permitted.
      */
     public function index(Request $request): Response
     {
-        $search = trim((string) $request->query('search', ''));
         $actor = $request->user();
 
-        $roles = Role::query()
+        abort_unless($actor->canAny(['roles.view', 'permissions.view']), 403);
+
+        $search = trim((string) $request->query('search', ''));
+        $canViewRoles = $actor->can('roles.view');
+        $canViewPermissions = $actor->can('permissions.view');
+
+        $roles = ! $canViewRoles ? null : Role::query()
             ->with('permissions:id,name')
             ->withCount(['users', 'permissions'])
             ->where('guard_name', PermissionRegistry::guard())
@@ -51,8 +57,25 @@ class RoleController extends Controller
                 'created_at' => $role->created_at?->toIso8601String(),
             ]);
 
+        // Permissions are defined in code and few in number, so the whole
+        // list is sent and filtered in the browser.
+        $permissions = ! $canViewPermissions ? null : Permission::query()
+            ->with('roles:id,name')
+            ->withCount('users')
+            ->where('guard_name', PermissionRegistry::guard())
+            ->orderBy('name')
+            ->get()
+            ->map(fn (Permission $permission) => [
+                'id' => $permission->id,
+                'name' => $permission->name,
+                ...PermissionRegistry::parse($permission->name),
+                'roles' => $permission->roles->pluck('name')->sort()->values(),
+                'users_count' => $permission->users_count,
+            ]);
+
         return Inertia::render('admin/roles/index', [
             'roles' => $roles,
+            'permissions' => $permissions,
             'permissionGroups' => $this->permissionGroups(),
             'filters' => ['search' => $search],
         ]);
