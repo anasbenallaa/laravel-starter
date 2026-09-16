@@ -18,6 +18,11 @@ export async function loadLocale(locale: string): Promise<void> {
     const loader = loaders[`../../../lang/${locale}.json`];
 
     if (!loader) {
+        // Usually lang/ was not available when the assets were built.
+        console.error(
+            `[i18n] No translation file bundled for "${locale}" (lang/${locale}.json).`,
+        );
+
         return;
     }
 

@@ -30,6 +30,8 @@ RUN npm ci --no-audit --no-fund
 COPY vite.config.ts tsconfig.json ./
 COPY resources ./resources
 COPY public ./public
+# Translations are bundled from lang/*.json (import.meta.glob in lib/i18n.ts).
+COPY lang ./lang
 
 # Overwrite Wayfinder types with freshly generated ones from deps stage
 COPY --from=deps /app/resources/js/actions ./resources/js/actions
@@ -40,7 +42,11 @@ COPY --from=deps /app/resources/js/wayfinder ./resources/js/wayfinder
 # Wayfinder Vite plugin shim
 RUN printf '#!/bin/sh\nexit 0\n' > /usr/local/bin/php && chmod +x /usr/local/bin/php
 
-RUN NODE_OPTIONS=--dns-result-order=ipv4first npm run build
+RUN NODE_OPTIONS=--dns-result-order=ipv4first npm run build \
+    && for locale in $(ls lang/*.json | xargs -n1 basename | sed 's/\.json$//'); do \
+        ls public/build/assets/${locale}-*.js >/dev/null 2>&1 \
+            || { echo "Missing translation bundle for ${locale}" >&2; exit 1; }; \
+    done
 
 # ============================================================================
 # Stage 3: Production Runtime (Using Base Image)
