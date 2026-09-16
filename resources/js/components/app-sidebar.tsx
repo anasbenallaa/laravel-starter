@@ -48,7 +48,9 @@ export function AppSidebar() {
                 <NavMain items={mainNavItems} />
             </SidebarContent>
 
-            <SidebarFooter>
+            {/* Desktop only: on mobile the header holds the user menu and
+                sidebar trigger. */}
+            <SidebarFooter className="max-md:hidden">
                 <div className="flex items-center gap-2 group-data-[collapsible=icon]:flex-col-reverse group-data-[collapsible=icon]:gap-1">
                     <div className="min-w-0 flex-1 group-data-[collapsible=icon]:flex-none">
                         <NavUser />
