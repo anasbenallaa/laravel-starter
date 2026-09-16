@@ -68,6 +68,11 @@ const actions: Record<string, ActionPresentation> = {
     unassigned: { label: 'Unassigned', icon: UserRemove01Icon, tone: 'red' },
     granted: { label: 'Granted', icon: Key01Icon, tone: 'green' },
     revoked: { label: 'Revoked', icon: LockKeyIcon, tone: 'red' },
+    password_reset_sent: {
+        label: 'Password reset sent',
+        icon: LockPasswordIcon,
+        tone: 'blue',
+    },
     password_changed: {
         label: 'Password changed',
         icon: LockPasswordIcon,

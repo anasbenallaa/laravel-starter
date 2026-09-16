@@ -152,7 +152,8 @@ Administrators can now build roles such as "Order Approver" from
 its own permission:
 
 - **Create user:** `users.create`. Name, email, password and optional roles.
-- **Edit user:** `users.update`. Name, email and an optional new password.
+- **Edit user:** `users.update`. Name and email only; administrators never set passwords.
+- **Send password reset link:** `users.reset_password` (same manageable-user rule). Reuses Laravel's password broker, so the user gets the standard reset email and page; throttled; logged as `password_reset_sent`.
 - **Manage access:** `users.update`. Roles and direct permissions.
 - **Delete user:** `users.delete`. `App\Actions\Users\DeleteUser` also removes
   the user's notifications and avatar; profile-settings deletion uses the same

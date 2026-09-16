@@ -1,9 +1,12 @@
 <?php
 
 use App\Authorization\SystemRole;
+use App\Models\Activity;
 use App\Models\User;
+use Illuminate\Auth\Notifications\ResetPassword;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Notification;
 use Illuminate\Support\Facades\Storage;
 use Inertia\Testing\AssertableInertia as Assert;
 use Spatie\Permission\Models\Role;
@@ -71,7 +74,7 @@ test('non admins cannot create users with roles beyond their own access', functi
         ->assertSessionHasNoErrors();
 });
 
-test('an authorized user can update a user and optionally their password', function () {
+test('an authorized user can update a user, but never their password', function () {
     $admin = createAdmin();
     $user = User::factory()->create(['name' => 'Old Name', 'password' => 'original-password']);
 
@@ -79,7 +82,12 @@ test('an authorized user can update a user and optionally their password', funct
         ->assertInertia(fn (Assert $page) => $page->component('admin/users/edit')->where('user.name', 'Old Name'));
 
     $this->actingAs($admin)
-        ->put(route('admin.users.update', $user), ['name' => 'New Name', 'email' => 'new@example.com', 'password' => ''])
+        ->put(route('admin.users.update', $user), [
+            'name' => 'New Name',
+            'email' => 'new@example.com',
+            'password' => 'attempted-password',
+            'password_confirmation' => 'attempted-password',
+        ])
         ->assertRedirect(route('admin.users.index'))
         ->assertSessionHasNoErrors();
 
@@ -88,17 +96,49 @@ test('an authorized user can update a user and optionally their password', funct
     expect($user->name)->toBe('New Name')
         ->and($user->email)->toBe('new@example.com')
         ->and(Hash::check('original-password', $user->password))->toBeTrue();
+});
+
+test('an authorized user can send a password reset link using the standard reset flow', function () {
+    Notification::fake();
+    $admin = createAdmin();
+    $user = User::factory()->create(['name' => 'Jane Roe']);
 
     $this->actingAs($admin)
-        ->put(route('admin.users.update', $user), [
-            'name' => 'New Name',
-            'email' => 'new@example.com',
-            'password' => 'changed-password',
-            'password_confirmation' => 'changed-password',
-        ])
+        ->from(route('admin.users.edit', $user))
+        ->post(route('admin.users.password-reset', $user))
+        ->assertRedirect(route('admin.users.edit', $user))
         ->assertSessionHasNoErrors();
 
-    expect(Hash::check('changed-password', $user->fresh()->password))->toBeTrue();
+    Notification::assertSentTo($user, ResetPassword::class);
+
+    expect(DB::table('password_reset_tokens')->where('email', $user->email)->exists())->toBeTrue()
+        ->and(Activity::query()->where('action', 'password_reset_sent')->sole()->description)->toBe('Sent a password reset link to Jane Roe');
+});
+
+test('password reset links are throttled like the forgot password flow', function () {
+    Notification::fake();
+    $admin = createAdmin();
+    $user = User::factory()->create();
+
+    $this->actingAs($admin)->post(route('admin.users.password-reset', $user))->assertSessionHasNoErrors();
+    $this->actingAs($admin)->post(route('admin.users.password-reset', $user))->assertSessionHasErrors('password_reset');
+
+    Notification::assertSentToTimes($user, ResetPassword::class, 1);
+});
+
+test('sending password reset links requires the permission and a manageable user', function () {
+    Notification::fake();
+    $editor = userWithPermissions(['users.view', 'users.update'], 'User Editor');
+    $target = User::factory()->create();
+
+    $this->actingAs($editor)->post(route('admin.users.password-reset', $target))->assertForbidden();
+
+    $resetter = userWithPermissions(['users.view', 'users.reset_password'], 'Resetter');
+    $admin = User::factory()->create()->assignRole(SystemRole::ADMIN);
+
+    $this->actingAs($resetter)->post(route('admin.users.password-reset', $admin))->assertForbidden();
+
+    Notification::assertNothingSent();
 });
 
 test('non admins cannot edit admins or users with more access', function () {

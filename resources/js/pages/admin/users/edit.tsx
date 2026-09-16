@@ -10,10 +10,9 @@ type Props = {
         avatar: string | null;
         created_at: string | null;
     };
-    passwordRules: string;
 };
 
-export default function EditUser({ user, passwordRules }: Props) {
+export default function EditUser({ user }: Props) {
     return (
         <>
             <Head title={`Edit ${user.name}`} />
@@ -22,7 +21,9 @@ export default function EditUser({ user, passwordRules }: Props) {
                 <UserForm
                     key={user.id}
                     action={UserController.update(user.id)}
-                    passwordRules={passwordRules}
+                    passwordResetUrl={UserController.sendPasswordReset.url(
+                        user.id,
+                    )}
                     initial={{ name: user.name, email: user.email }}
                     submitLabel="Save changes"
                 />

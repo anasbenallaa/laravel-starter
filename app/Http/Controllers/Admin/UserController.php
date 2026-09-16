@@ -17,7 +17,8 @@ use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
-use Illuminate\Validation\Rules\Password;
+use Illuminate\Support\Facades\Password;
+use Illuminate\Validation\Rules\Password as PasswordRule;
 use Illuminate\Validation\ValidationException;
 use Inertia\Inertia;
 use Inertia\Response;
@@ -88,7 +89,7 @@ class UserController extends Controller
     {
         return Inertia::render('admin/users/create', [
             'roles' => $this->assignableRoles($request->user()),
-            'passwordRules' => Password::defaults()->toPasswordRulesString(),
+            'passwordRules' => PasswordRule::defaults()->toPasswordRulesString(),
         ]);
     }
 
@@ -127,34 +128,45 @@ class UserController extends Controller
                 'avatar' => $user->avatar,
                 'created_at' => $user->created_at?->toIso8601String(),
             ],
-            'passwordRules' => Password::defaults()->toPasswordRulesString(),
         ]);
     }
 
     /**
      * Update a user's name, email and (optionally) password.
      */
-    public function update(UpdateUserRequest $request, User $user, ActivityLoggerInterface $activity): RedirectResponse
+    public function update(UpdateUserRequest $request, User $user): RedirectResponse
     {
-        $user->fill($request->safe()->only(['name', 'email']));
-
-        if ($request->filled('password')) {
-            $user->password = (string) $request->validated('password');
-        }
-
-        // Name/email changes are logged by the observer; the password never is,
-        // so record that it changed (without any value).
-        $passwordChanged = $user->isDirty('password');
-
-        $user->save();
-
-        if ($passwordChanged) {
-            $activity->log(action: 'password_changed', description: "Changed password for {$user->name}", subject: $user);
-        }
+        // Name/email changes are logged by the Auditable observer.
+        $user->update($request->safe()->only(['name', 'email']));
 
         Inertia::flash('toast', ['type' => 'success', 'message' => __('User updated successfully.')]);
 
         return to_route('admin.users.index');
+    }
+
+    /**
+     * Email the user a password reset link, using the same broker, email and
+     * reset page as "Forgot password". Administrators never set passwords.
+     */
+    public function sendPasswordReset(Request $request, User $user, ActivityLoggerInterface $activity): RedirectResponse
+    {
+        abort_unless($this->delegation->canManageUser($request->user(), $user), 403);
+
+        $status = Password::broker()->sendResetLink(['email' => $user->email]);
+
+        if ($status !== Password::RESET_LINK_SENT) {
+            throw ValidationException::withMessages(['password_reset' => __($status)]);
+        }
+
+        $activity->log(
+            action: 'password_reset_sent',
+            description: "Sent a password reset link to {$user->name}",
+            subject: $user,
+        );
+
+        Inertia::flash('toast', ['type' => 'success', 'message' => __('Password reset link sent to :email.', ['email' => $user->email])]);
+
+        return back();
     }
 
     /**

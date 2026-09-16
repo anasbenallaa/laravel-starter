@@ -20,7 +20,8 @@
 
 return [
 
-    'users' => ['view', 'create', 'update', 'delete'],
+    // reset_password: email a user a password reset link (admins never set passwords).
+    'users' => ['view', 'create', 'update', 'delete', 'reset_password'],
 
     'roles' => ['view', 'create', 'update', 'delete'],
 

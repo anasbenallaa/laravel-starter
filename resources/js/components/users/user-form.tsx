@@ -1,20 +1,28 @@
-import { useForm } from '@inertiajs/react';
+import { Mail01Icon } from '@hugeicons/core-free-icons';
+import { router, useForm } from '@inertiajs/react';
+import { useState } from 'react';
 import { SystemRoleBadge } from '@/components/authorization/role-badge';
 import { FormSection } from '@/components/form-section';
 import InputError from '@/components/input-error';
 import PasswordInput from '@/components/password-input';
+import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
+import { Icon } from '@/components/ui/icon';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { UnsavedChangesBar } from '@/components/unsaved-changes-bar';
+import { useAuthorization } from '@/hooks/use-authorization';
 import { cn } from '@/lib/utils';
 import type { AssignableRole } from '@/types';
 
 type Props = {
     /** Wayfinder route definition the form submits to. */
     action: { url: string; method: 'post' | 'put' };
-    passwordRules: string;
+    /** Password rules for the create form's password fields. */
+    passwordRules?: string;
     initial?: { name: string; email: string };
+    /** Edit form: endpoint that emails the user a password reset link. */
+    passwordResetUrl?: string;
     /** Role choices; only shown when creating a user. */
     roles?: AssignableRole[];
     submitLabel: string;
@@ -26,8 +34,12 @@ export function UserForm({
     initial,
     roles,
     submitLabel,
+    passwordResetUrl,
 }: Props) {
     const isEditing = initial !== undefined;
+    const { can } = useAuthorization();
+    const [sendingReset, setSendingReset] = useState(false);
+    const [resetError, setResetError] = useState<string>();
     const form = useForm({
         name: initial?.name ?? '',
         email: initial?.email ?? '',
@@ -47,20 +59,35 @@ export function UserForm({
     const submit = (event: React.FormEvent) => {
         event.preventDefault();
 
+        // Editing never sends passwords: users set their own via a reset link.
         form.transform((data) =>
-            isEditing
-                ? {
-                      name: data.name,
-                      email: data.email,
-                      password: data.password,
-                      password_confirmation: data.password_confirmation,
-                  }
-                : data,
+            isEditing ? { name: data.name, email: data.email } : data,
         );
         form.submit(action.method, action.url, {
             preserveScroll: true,
             onError: () => form.reset('password', 'password_confirmation'),
         });
+    };
+
+    const sendPasswordReset = () => {
+        if (!passwordResetUrl) {
+            return;
+        }
+
+        router.post(
+            passwordResetUrl,
+            {},
+            {
+                preserveScroll: true,
+                preserveState: true,
+                onStart: () => {
+                    setSendingReset(true);
+                    setResetError(undefined);
+                },
+                onFinish: () => setSendingReset(false),
+                onError: (errors) => setResetError(errors.password_reset),
+            },
+        );
     };
 
     return (
@@ -100,51 +127,81 @@ export function UserForm({
                 </div>
             </FormSection>
 
-            <FormSection
-                title="Password"
-                description={
-                    isEditing
-                        ? 'Leave blank to keep the current password.'
-                        : 'Share it with the user securely; they can change it in their security settings.'
-                }
-                className="grid gap-4 md:grid-cols-2"
-            >
-                <div className="grid content-start gap-2">
-                    <Label htmlFor="password">
-                        {isEditing ? 'New password' : 'Password *'}
-                    </Label>
-                    <PasswordInput
-                        id="password"
-                        value={form.data.password}
-                        onChange={(event) =>
-                            form.setData('password', event.target.value)
-                        }
-                        autoComplete="new-password"
-                        passwordrules={passwordRules}
-                        required={!isEditing}
-                    />
-                    <InputError message={form.errors.password} />
-                </div>
-                <div className="grid content-start gap-2">
-                    <Label htmlFor="password_confirmation">
-                        Confirm password{!isEditing && ' *'}
-                    </Label>
-                    <PasswordInput
-                        id="password_confirmation"
-                        value={form.data.password_confirmation}
-                        onChange={(event) =>
-                            form.setData(
-                                'password_confirmation',
-                                event.target.value,
-                            )
-                        }
-                        autoComplete="new-password"
-                        passwordrules={passwordRules}
-                        required={!isEditing || form.data.password !== ''}
-                    />
-                    <InputError message={form.errors.password_confirmation} />
-                </div>
-            </FormSection>
+            {isEditing ? (
+                <FormSection
+                    title="Password"
+                    description="Passwords are never set by administrators. Send the user an email with a secure link to choose a new password."
+                    className="space-y-2"
+                >
+                    {passwordResetUrl && can('users.reset_password') ? (
+                        <>
+                            <Button
+                                type="button"
+                                variant="outline"
+                                onClick={sendPasswordReset}
+                                disabled={sendingReset}
+                            >
+                                <Icon iconNode={Mail01Icon} />
+                                {sendingReset
+                                    ? 'Sending…'
+                                    : 'Send password reset link'}
+                            </Button>
+                            <p className="text-muted-foreground text-xs">
+                                The link is sent to {initial.email} and expires
+                                after a limited time.
+                            </p>
+                            <InputError message={resetError} />
+                        </>
+                    ) : (
+                        <p className="text-muted-foreground text-sm">
+                            You don't have permission to send password reset
+                            links.
+                        </p>
+                    )}
+                </FormSection>
+            ) : (
+                <FormSection
+                    title="Password"
+                    description="Share it with the user securely; they can change it in their security settings."
+                    className="grid gap-4 md:grid-cols-2"
+                >
+                    <div className="grid content-start gap-2">
+                        <Label htmlFor="password">Password *</Label>
+                        <PasswordInput
+                            id="password"
+                            value={form.data.password}
+                            onChange={(event) =>
+                                form.setData('password', event.target.value)
+                            }
+                            autoComplete="new-password"
+                            passwordrules={passwordRules}
+                            required
+                        />
+                        <InputError message={form.errors.password} />
+                    </div>
+                    <div className="grid content-start gap-2">
+                        <Label htmlFor="password_confirmation">
+                            Confirm password *
+                        </Label>
+                        <PasswordInput
+                            id="password_confirmation"
+                            value={form.data.password_confirmation}
+                            onChange={(event) =>
+                                form.setData(
+                                    'password_confirmation',
+                                    event.target.value,
+                                )
+                            }
+                            autoComplete="new-password"
+                            passwordrules={passwordRules}
+                            required
+                        />
+                        <InputError
+                            message={form.errors.password_confirmation}
+                        />
+                    </div>
+                </FormSection>
+            )}
 
             {roles && (
                 <FormSection

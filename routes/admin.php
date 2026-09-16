@@ -23,6 +23,9 @@ Route::middleware(['auth', 'verified'])->prefix('admin')->name('admin.')->group(
     Route::put('users/{user}', [UserController::class, 'update'])
         ->middleware('can:users.update')
         ->name('users.update');
+    Route::post('users/{user}/password-reset', [UserController::class, 'sendPasswordReset'])
+        ->middleware(['can:users.reset_password', 'throttle:6,1'])
+        ->name('users.password-reset');
     Route::delete('users/{user}', [UserController::class, 'destroy'])
         ->middleware('can:users.delete')
         ->name('users.destroy');

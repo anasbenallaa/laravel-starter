@@ -3,19 +3,18 @@
 namespace App\Http\Requests\Admin;
 
 use App\Authorization\PermissionDelegation;
-use App\Concerns\PasswordValidationRules;
 use App\Concerns\ProfileValidationRules;
 use App\Models\User;
 use Illuminate\Foundation\Http\FormRequest;
-use Illuminate\Validation\Rules\Password;
 
 class UpdateUserRequest extends FormRequest
 {
-    use PasswordValidationRules, ProfileValidationRules;
+    use ProfileValidationRules;
 
     /**
-     * Changing a user's email or password lets you sign in as them, so the
-     * actor must also be allowed to manage this particular user.
+     * Changing a user's email lets you take over their account (via password
+     * reset), so the actor must also be allowed to manage this particular user.
+     * Passwords are never set here; see UserController::sendPasswordReset().
      */
     public function authorize(): bool
     {
@@ -30,8 +29,6 @@ class UpdateUserRequest extends FormRequest
     {
         return [
             ...$this->profileRules($this->targetUser()->id),
-            // Leave blank to keep the current password.
-            'password' => ['nullable', 'string', Password::default(), 'confirmed'],
         ];
     }
 

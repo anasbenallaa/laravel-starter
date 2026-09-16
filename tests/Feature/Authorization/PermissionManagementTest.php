@@ -19,7 +19,7 @@ test('the page only sends the sections the user may view', function () {
         ->assertInertia(fn (Assert $page) => $page
             ->component('admin/roles/index')
             ->where('roles', null)
-            ->has('permissions', 11),
+            ->has('permissions', 12),
         );
 
     $this->actingAs(userWithPermissions(['roles.view'], 'Role Viewer'))
@@ -38,7 +38,7 @@ test('every permission is listed with its roles and direct users', function () {
     $this->actingAs($viewer)
         ->get(route('admin.roles.index'))
         ->assertInertia(fn (Assert $page) => $page
-            ->has('permissions', 12)
+            ->has('permissions', 13)
             ->where('permissions.3.name', 'reports.export')
             ->where('permissions.3.resource', 'reports')
             ->where('permissions.3.action', 'export')

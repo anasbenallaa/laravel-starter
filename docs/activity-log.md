@@ -27,13 +27,13 @@ allowlisted there (e.g. `Activity` itself), with a reason.
 
 ## What gets recorded
 
-| Source                                            | Actions                                                                                           | How                                          |
-| ------------------------------------------------- | ------------------------------------------------------------------------------------------------- | -------------------------------------------- |
-| Models using `Auditable` (e.g. `User`)            | `created`, `updated`, `deleted`; plus `trashed`, `restored` and `force_deleted` with soft deletes | `App\Observers\ActivityObserver`, automatic  |
-| Sign-in / sign-out                                | `login`, `logout`                                                                                 | `App\Listeners\LogAuthenticationActivity`    |
-| Role and permission changes (Spatie pivot tables) | `created`/`updated`/`deleted` role, `assigned`/`unassigned` role, `granted`/`revoked` permission  | `App\Actions\Authorization\LogAccessChanges` |
-| Password changes (the value is never stored)      | `password_changed`                                                                                | `SecurityController`, `Admin\UserController` |
-| New permissions synced from config                | `synced`                                                                                          | `App\Actions\Authorization\SyncPermissions`  |
+| Source                                              | Actions                                                                                           | How                                                             |
+| --------------------------------------------------- | ------------------------------------------------------------------------------------------------- | --------------------------------------------------------------- |
+| Models using `Auditable` (e.g. `User`)              | `created`, `updated`, `deleted`; plus `trashed`, `restored` and `force_deleted` with soft deletes | `App\Observers\ActivityObserver`, automatic                     |
+| Sign-in / sign-out                                  | `login`, `logout`                                                                                 | `App\Listeners\LogAuthenticationActivity`                       |
+| Role and permission changes (Spatie pivot tables)   | `created`/`updated`/`deleted` role, `assigned`/`unassigned` role, `granted`/`revoked` permission  | `App\Actions\Authorization\LogAccessChanges`                    |
+| Password changes and reset links (no values stored) | `password_changed`, `password_reset_sent`                                                         | `SecurityController`, `Admin\UserController::sendPasswordReset` |
+| New permissions synced from config                  | `synced`                                                                                          | `App\Actions\Authorization\SyncPermissions`                     |
 
 Each entry stores:
 

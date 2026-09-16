@@ -28,7 +28,7 @@ test('users with roles.view can list roles with real counts', function () {
             ->where('roles.data.0.name', SystemRole::ADMIN)
             ->where('roles.data.0.is_system', true)
             ->where('roles.data.0.users_count', 2)
-            ->where('roles.data.0.permissions_count', 11)
+            ->where('roles.data.0.permissions_count', 12)
             ->where('roles.data.1.name', 'Viewer')
             ->where('roles.data.1.users_count', 1)
             ->where('roles.data.1.permissions_count', 1)
@@ -96,7 +96,7 @@ test('the admin role cannot be renamed or modified', function () {
         ->assertSessionHasErrors('role');
 
     expect($adminRole->fresh()->name)->toBe(SystemRole::ADMIN)
-        ->and($adminRole->fresh()->permissions()->count())->toBe(11);
+        ->and($adminRole->fresh()->permissions()->count())->toBe(12);
 });
 
 test('custom roles can be deleted but the admin role cannot', function () {

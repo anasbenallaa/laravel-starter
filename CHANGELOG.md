@@ -13,6 +13,7 @@ see how the codebase evolved. See `docs/architecture.md` for the current map.
 
 ### Added
 
+- **Users:** **Send password reset link** on Edit user (new `users.reset_password` permission), reusing Laravel's password broker and reset email; throttled and logged as `password_reset_sent`.
 - **Activity log export:** `GET /activities/export`, protected by the new `activities.export` permission, streams the timeline's current filtered, scoped rows as CSV (`ActivityCsv`, formula-safe) and records an `exported` activity; the page gains an **Export CSV** button.
 - **Activity log** (`docs/activity-log.md`): single append-only `activities` table, `Auditable` trait + generic `ActivityObserver`, `ActivityLoggerInterface`, login/logout listener, role/permission/password change logging, read-only `/activities` timeline with infinite scroll (cursor pagination, 20 per page), filters and `activities.view.all`; "View activities" in the Users menu.
 - **Guard test** `AuditableModelsTest`: every model must use `Auditable`.
@@ -28,6 +29,7 @@ see how the codebase evolved. See `docs/architecture.md` for the current map.
 
 ### Changed
 
+- **Edit user** no longer sets passwords; the password fields were replaced by the reset-link action (create still sets an initial password).
 - **Activities page:** full width, no heading; timeline scrolls on the left, search/filters/export in a sticky panel on the right (on top on mobile).
 - **Roles & permissions page:** Roles, Matrix and Permissions views are one `DataTable` with tab buttons (previously role cards and separate tables).
 - **Permissions** can only be created from code; the permissions page is read-only and merged into Roles & permissions; permission names allow an optional qualifier (`activities.view.all`).
