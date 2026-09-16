@@ -1,19 +1,18 @@
-import { Link, useForm } from '@inertiajs/react';
+import { useForm } from '@inertiajs/react';
 import { SystemRoleBadge } from '@/components/authorization/role-badge';
 import { FormSection } from '@/components/form-section';
 import InputError from '@/components/input-error';
 import PasswordInput from '@/components/password-input';
-import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { UnsavedChangesBar } from '@/components/unsaved-changes-bar';
 import { cn } from '@/lib/utils';
 import type { AssignableRole } from '@/types';
 
 type Props = {
     /** Wayfinder route definition the form submits to. */
     action: { url: string; method: 'post' | 'put' };
-    cancelHref: string;
     passwordRules: string;
     initial?: { name: string; email: string };
     /** Role choices; only shown when creating a user. */
@@ -23,7 +22,6 @@ type Props = {
 
 export function UserForm({
     action,
-    cancelHref,
     passwordRules,
     initial,
     roles,
@@ -66,7 +64,7 @@ export function UserForm({
     };
 
     return (
-        <form onSubmit={submit} className="space-y-6">
+        <form onSubmit={submit} className="space-y-6 md:pb-24">
             <FormSection
                 title="User details"
                 description="The name and email address used to sign in."
@@ -216,14 +214,15 @@ export function UserForm({
                 </FormSection>
             )}
 
-            <div className="flex gap-2">
-                <Button type="submit" disabled={form.processing}>
-                    {submitLabel}
-                </Button>
-                <Button variant="ghost" asChild>
-                    <Link href={cancelHref}>Cancel</Link>
-                </Button>
-            </div>
+            <UnsavedChangesBar
+                visible={form.isDirty}
+                processing={form.processing}
+                saveLabel={submitLabel}
+                onReset={() => {
+                    form.reset();
+                    form.clearErrors();
+                }}
+            />
         </form>
     );
 }

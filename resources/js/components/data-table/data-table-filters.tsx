@@ -1,4 +1,4 @@
-import { FilterHorizontalIcon } from '@hugeicons/core-free-icons';
+import { FilterIcon } from '@hugeicons/core-free-icons';
 import { Button } from '@/components/ui/button';
 import {
     DropdownMenu,
@@ -38,7 +38,7 @@ export function DataTableFilters({ filters, values, onChange }: Props) {
                             : 'Filters'
                     }
                 >
-                    <Icon iconNode={FilterHorizontalIcon} />
+                    <Icon iconNode={FilterIcon} />
                     {activeCount > 0 && (
                         <span className="bg-primary text-primary-foreground ring-background absolute -top-1 -right-1 flex size-4 items-center justify-center rounded-full text-[10px] font-semibold ring-2">
                             {activeCount}

@@ -22,7 +22,6 @@ export default function EditUser({ user, passwordRules }: Props) {
                 <UserForm
                     key={user.id}
                     action={UserController.update(user.id)}
-                    cancelHref={UserController.index.url()}
                     passwordRules={passwordRules}
                     initial={{ name: user.name, email: user.email }}
                     submitLabel="Save changes"

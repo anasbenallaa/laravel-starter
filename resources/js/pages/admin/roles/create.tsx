@@ -19,7 +19,6 @@ export default function CreateRole({
             <div className="p-4 md:p-6">
                 <RoleForm
                     action={RoleController.store()}
-                    cancelHref={RoleController.index.url()}
                     permissionGroups={permissionGroups}
                     delegablePermissions={delegablePermissions}
                     submitLabel="Create role"

@@ -16,7 +16,6 @@ export default function CreateUser({ roles, passwordRules }: Props) {
             <div className="p-4 md:p-6">
                 <UserForm
                     action={UserController.store()}
-                    cancelHref={UserController.index.url()}
                     passwordRules={passwordRules}
                     roles={roles}
                     submitLabel="Create user"

@@ -1,4 +1,4 @@
-import { Link, useForm } from '@inertiajs/react';
+import { useForm } from '@inertiajs/react';
 import { PermissionGroups } from '@/components/authorization/permission-groups';
 import { SystemRoleBadge } from '@/components/authorization/role-badge';
 import { FormSection } from '@/components/form-section';
@@ -6,13 +6,13 @@ import InputError from '@/components/input-error';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { UnsavedChangesBar } from '@/components/unsaved-changes-bar';
 import { isDelegable } from '@/lib/permissions';
 import type { DelegablePermissions, PermissionGroup } from '@/types';
 
 type Props = {
     /** Wayfinder route definition the form submits to. */
     action?: { url: string; method: 'post' | 'put' };
-    cancelHref: string;
     permissionGroups: PermissionGroup[];
     delegablePermissions: DelegablePermissions;
     initialName?: string;
@@ -27,7 +27,6 @@ type Props = {
 
 export function RoleForm({
     action,
-    cancelHref,
     permissionGroups,
     delegablePermissions,
     initialName = '',
@@ -73,7 +72,7 @@ export function RoleForm({
     };
 
     return (
-        <form onSubmit={submit} className="space-y-6">
+        <form onSubmit={submit} className="space-y-6 md:pb-24">
             {form.errors.role && (
                 <div className="rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700 dark:border-red-900/50 dark:bg-red-950/40 dark:text-red-300">
                     {form.errors.role}
@@ -162,14 +161,15 @@ export function RoleForm({
             </FormSection>
 
             {!readOnly && (
-                <div className="flex gap-2">
-                    <Button type="submit" disabled={form.processing}>
-                        {submitLabel}
-                    </Button>
-                    <Button variant="ghost" asChild>
-                        <Link href={cancelHref}>Cancel</Link>
-                    </Button>
-                </div>
+                <UnsavedChangesBar
+                    visible={form.isDirty}
+                    processing={form.processing}
+                    saveLabel={submitLabel}
+                    onReset={() => {
+                        form.reset();
+                        form.clearErrors();
+                    }}
+                />
             )}
         </form>
     );

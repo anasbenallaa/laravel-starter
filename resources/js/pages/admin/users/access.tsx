@@ -1,10 +1,9 @@
-import { Head, Link, useForm } from '@inertiajs/react';
+import { Head, useForm } from '@inertiajs/react';
 import UserAccessController from '@/actions/App/Http/Controllers/Admin/UserAccessController';
 import UserController from '@/actions/App/Http/Controllers/Admin/UserController';
 import { PermissionGroups } from '@/components/authorization/permission-groups';
 import { SystemRoleBadge } from '@/components/authorization/role-badge';
 import InputError from '@/components/input-error';
-import { Button } from '@/components/ui/button';
 import {
     Card,
     CardContent,
@@ -13,6 +12,7 @@ import {
     CardTitle,
 } from '@/components/ui/card';
 import { Checkbox } from '@/components/ui/checkbox';
+import { UnsavedChangesBar } from '@/components/unsaved-changes-bar';
 import { UserInfo } from '@/components/user-info';
 import { ADMIN_ROLE } from '@/lib/permissions';
 import { cn } from '@/lib/utils';
@@ -41,9 +41,10 @@ export default function UserAccess({
     delegablePermissions,
     isLastAdmin,
 }: Props) {
+    // Sorted, so toggling a value back matches the defaults again (isDirty).
     const form = useForm({
-        roles: assigned.roles,
-        permissions: assigned.permissions,
+        roles: [...assigned.roles].sort(),
+        permissions: [...assigned.permissions].sort(),
     });
 
     const selectedRoles = roles.filter((role) =>
@@ -70,6 +71,8 @@ export default function UserAccess({
         event.preventDefault();
         form.put(UserAccessController.update.url(user.id), {
             preserveScroll: true,
+            // The page stays open, so the saved values become the new baseline.
+            onSuccess: () => form.setDefaults(),
         });
     };
 
@@ -79,7 +82,7 @@ export default function UserAccess({
 
             <form
                 onSubmit={submit}
-                className="mx-auto flex w-full max-w-5xl flex-col gap-6 p-4 md:p-6"
+                className="mx-auto flex w-full max-w-5xl flex-col gap-6 p-4 md:p-6 md:pb-28"
             >
                 <div className="flex flex-wrap items-center justify-between gap-4">
                     <div className="flex items-center gap-3">
@@ -93,19 +96,6 @@ export default function UserAccess({
                             showEmail
                             avatarClassName="size-11"
                         />
-                    </div>
-                    <div className="flex gap-2">
-                        <Button variant="ghost" asChild>
-                            <Link href={UserController.index.url()}>
-                                Cancel
-                            </Link>
-                        </Button>
-                        <Button
-                            type="submit"
-                            disabled={form.processing || !form.isDirty}
-                        >
-                            Save access
-                        </Button>
                     </div>
                 </div>
 
@@ -247,6 +237,15 @@ export default function UserAccess({
                         )}
                     </CardContent>
                 </Card>
+                <UnsavedChangesBar
+                    visible={form.isDirty}
+                    processing={form.processing}
+                    saveLabel="Save access"
+                    onReset={() => {
+                        form.reset();
+                        form.clearErrors();
+                    }}
+                />
             </form>
         </>
     );

@@ -35,7 +35,6 @@ export default function EditRole({
                     // Remount when the role changes so the form resets.
                     key={role.id}
                     action={RoleController.update(String(role.id))}
-                    cancelHref={RoleController.index.url()}
                     permissionGroups={permissionGroups}
                     delegablePermissions={delegablePermissions}
                     initialName={role.name}
