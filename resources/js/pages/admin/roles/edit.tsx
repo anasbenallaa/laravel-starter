@@ -1,10 +1,6 @@
-import { Head, Link } from '@inertiajs/react';
+import { Head } from '@inertiajs/react';
 import RoleController from '@/actions/App/Http/Controllers/Admin/RoleController';
-import { PermissionGroups } from '@/components/authorization/permission-groups';
-import { SystemRoleBadge } from '@/components/authorization/role-badge';
 import { RoleForm } from '@/components/authorization/role-form';
-import Heading from '@/components/heading';
-import { Button } from '@/components/ui/button';
 import type { DelegablePermissions, PermissionGroup } from '@/types';
 
 type Props = {
@@ -26,56 +22,38 @@ export default function EditRole({
     permissionGroups,
     delegablePermissions,
 }: Props) {
+    const allPermissions = permissionGroups.flatMap((group) =>
+        group.permissions.map((permission) => permission.name),
+    );
+
     return (
         <>
-            <Head title={`Edit ${role.name}`} />
+            <Head title={role.name} />
 
-            <div className="flex flex-col gap-6 p-4 md:p-6">
-                <div className="flex flex-wrap items-center gap-3">
-                    <Heading
-                        title={canManage ? `Edit ${role.name}` : role.name}
-                        description={`Assigned to ${role.users_count} ${role.users_count === 1 ? 'user' : 'users'}.`}
-                    />
-                    {role.is_system && <SystemRoleBadge />}
-                </div>
-
-                {canManage ? (
-                    <RoleForm
-                        action={RoleController.update(String(role.id))}
-                        cancelHref={RoleController.index.url()}
-                        permissionGroups={permissionGroups}
-                        delegablePermissions={delegablePermissions}
-                        initialName={role.name}
-                        initialPermissions={role.permissions}
-                        submitLabel="Save changes"
-                    />
-                ) : (
-                    <div className="space-y-6">
-                        <div className="bg-muted/50 rounded-lg border px-4 py-3 text-sm">
-                            {role.is_system
-                                ? 'Admin is a protected system role. It cannot be renamed or deleted, and it always has every permission, including permissions created later.'
-                                : 'This role includes permissions you do not have, so you can view it but not change it.'}
-                        </div>
-                        <PermissionGroups
-                            groups={permissionGroups}
-                            selected={
-                                role.is_system
-                                    ? permissionGroups.flatMap((group) =>
-                                          group.permissions.map(
-                                              (permission) => permission.name,
-                                          ),
-                                      )
-                                    : role.permissions
-                            }
-                            readOnly
-                        />
-                        <Button variant="outline" asChild>
-                            <Link href={RoleController.index.url()}>
-                                Back to roles
-                            </Link>
-                        </Button>
-                    </div>
-                )}
+            <div className="p-4 md:p-6">
+                <RoleForm
+                    // Remount when the role changes so the form resets.
+                    key={role.id}
+                    action={RoleController.update(String(role.id))}
+                    cancelHref={RoleController.index.url()}
+                    permissionGroups={permissionGroups}
+                    delegablePermissions={delegablePermissions}
+                    initialName={role.name}
+                    // Admin always has every permission, including new ones.
+                    initialPermissions={
+                        role.is_system ? allPermissions : role.permissions
+                    }
+                    submitLabel="Save changes"
+                    readOnly={!canManage}
+                    isSystem={role.is_system}
+                    notice={
+                        role.is_system
+                            ? 'System roles keep their name and always have every permission, including permissions created later.'
+                            : !canManage
+                              ? 'This role includes permissions you do not have, so you can view it but not change it.'
+                              : undefined
+                    }
+                />
             </div>
         </>
     );
@@ -83,7 +61,7 @@ export default function EditRole({
 
 EditRole.layout = (props: Props) => ({
     breadcrumbs: [
-        { title: 'Roles', href: RoleController.index() },
+        { title: 'Roles & permissions', href: RoleController.index() },
         {
             title: props.role.name,
             href: RoleController.edit(String(props.role.id)),

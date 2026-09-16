@@ -46,12 +46,14 @@ class RoleController extends Controller
                 'is_system' => SystemRole::isSystem($role),
                 'users_count' => $role->users_count,
                 'permissions_count' => $role->permissions_count,
+                'permissions' => $role->permissions->pluck('name')->sort()->values(),
                 'can_manage' => $this->delegation->canManageRole($actor, $role),
                 'created_at' => $role->created_at?->toIso8601String(),
             ]);
 
         return Inertia::render('admin/roles/index', [
             'roles' => $roles,
+            'permissionGroups' => $this->permissionGroups(),
             'filters' => ['search' => $search],
         ]);
     }

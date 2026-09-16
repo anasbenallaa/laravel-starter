@@ -6,7 +6,6 @@ use App\Authorization\PermissionRegistry;
 use Closure;
 use Illuminate\Contracts\Validation\ValidationRule;
 use Illuminate\Validation\Rule;
-use Spatie\Permission\Models\Permission;
 use Spatie\Permission\Models\Role;
 
 trait AccessValidationRules
@@ -35,24 +34,6 @@ trait AccessValidationRules
                     $fail(__('Role already exists.'));
                 }
             },
-        ];
-    }
-
-    /**
-     * Permission name in "resource.action" form, unique per guard.
-     *
-     * @return array<int, ValidationRule|array<mixed>|string>
-     */
-    protected function permissionNameRules(?Permission $ignore = null): array
-    {
-        return [
-            'required',
-            'string',
-            'max:100',
-            'regex:'.PermissionRegistry::PATTERN,
-            Rule::unique('permissions', 'name')
-                ->where('guard_name', PermissionRegistry::guard())
-                ->ignore($ignore?->getKey()),
         ];
     }
 

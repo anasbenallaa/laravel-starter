@@ -5,6 +5,7 @@ namespace App\Actions\Authorization;
 use App\Authorization\PermissionRegistry;
 use App\Authorization\SystemRole;
 use Illuminate\Support\Facades\DB;
+use InvalidArgumentException;
 use Spatie\Permission\Models\Permission;
 use Spatie\Permission\Models\Role;
 use Spatie\Permission\PermissionRegistrar;
@@ -23,6 +24,14 @@ class SyncPermissions
      */
     public function handle(): array
     {
+        foreach (PermissionRegistry::configured() as $name) {
+            if (! PermissionRegistry::isValidName($name)) {
+                throw new InvalidArgumentException(
+                    "Permission [{$name}] in config/permissions.php must use the resource.action format with lowercase letters, numbers and underscores.",
+                );
+            }
+        }
+
         $this->registrar->forgetCachedPermissions();
 
         $guard = PermissionRegistry::guard();

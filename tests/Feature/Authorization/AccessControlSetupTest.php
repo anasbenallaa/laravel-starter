@@ -12,7 +12,7 @@ use Spatie\Permission\Traits\HasRoles;
 $initialPermissions = [
     'users.view', 'users.create', 'users.update', 'users.delete',
     'roles.view', 'roles.create', 'roles.update', 'roles.delete',
-    'permissions.view', 'permissions.create', 'permissions.update', 'permissions.delete',
+    'permissions.view',
 ];
 
 test('the user model uses spatie roles', function () {
@@ -52,7 +52,7 @@ test('seeding is idempotent', function () {
     $this->seed(DatabaseSeeder::class);
 
     expect(Role::count())->toBe(1)
-        ->and(Permission::count())->toBe(12)
+        ->and(Permission::count())->toBe(9)
         ->and(User::where('email', 'test@example.com')->count())->toBe(1)
         ->and(User::where('email', 'test@example.com')->first()->hasRole(SystemRole::ADMIN))->toBeTrue();
 });
@@ -66,13 +66,19 @@ test('the sync command reports what it did and never deletes unknown permissions
         ->assertSuccessful();
 
     expect(Permission::where('name', 'legacy.export')->exists())->toBeTrue()
-        ->and(Permission::count())->toBe(13)
-        ->and(Role::findByName(SystemRole::ADMIN)->permissions()->count())->toBe(13);
+        ->and(Permission::count())->toBe(10)
+        ->and(Role::findByName(SystemRole::ADMIN)->permissions()->count())->toBe(10);
 
     $this->artisan('permissions:sync')->assertSuccessful();
 
-    expect(Permission::count())->toBe(13);
+    expect(Permission::count())->toBe(10);
 });
+
+test('the sync rejects badly named permissions in the config', function () {
+    config(['permissions.Reports' => ['Export All']]);
+
+    $this->artisan('permissions:sync');
+})->throws(InvalidArgumentException::class, 'resource.action');
 
 test('admins pass every permission check, even for permissions they were never granted', function () {
     $admin = createAdmin();
@@ -135,7 +141,7 @@ test('the shared auth props expose role and permission names only', function () 
         ->assertInertia(fn ($page) => $page
             ->where('auth.isAdmin', true)
             ->where('auth.roles', [SystemRole::ADMIN])
-            ->has('auth.permissions', 12),
+            ->has('auth.permissions', 9),
         );
 });
 

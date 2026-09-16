@@ -1,7 +1,6 @@
 import { Head } from '@inertiajs/react';
 import RoleController from '@/actions/App/Http/Controllers/Admin/RoleController';
 import { RoleForm } from '@/components/authorization/role-form';
-import Heading from '@/components/heading';
 import type { DelegablePermissions, PermissionGroup } from '@/types';
 
 type Props = {
@@ -15,14 +14,9 @@ export default function CreateRole({
 }: Props) {
     return (
         <>
-            <Head title="New role" />
+            <Head title="Create role" />
 
-            <div className="flex flex-col gap-6 p-4 md:p-6">
-                <Heading
-                    title="New role"
-                    description="Name the role and choose what its members can do."
-                />
-
+            <div className="p-4 md:p-6">
                 <RoleForm
                     action={RoleController.store()}
                     cancelHref={RoleController.index.url()}
@@ -37,7 +31,7 @@ export default function CreateRole({
 
 CreateRole.layout = () => ({
     breadcrumbs: [
-        { title: 'Roles', href: RoleController.index() },
-        { title: 'New role', href: RoleController.create() },
+        { title: 'Roles & permissions', href: RoleController.index() },
+        { title: 'Create role', href: RoleController.create() },
     ],
 });

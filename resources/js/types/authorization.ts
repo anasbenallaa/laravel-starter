@@ -31,6 +31,7 @@ export type RoleListItem = {
     is_system: boolean;
     users_count: number;
     permissions_count: number;
+    permissions: string[];
     can_manage: boolean;
     created_at: string | null;
 };
@@ -60,5 +61,4 @@ export type PermissionListItem = {
     action: string;
     roles: string[];
     users_count: number;
-    is_configured: boolean;
 };

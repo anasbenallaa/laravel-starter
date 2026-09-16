@@ -171,7 +171,7 @@ test('non admins can only assign roles and permissions within their own access',
         ->assertSessionHasErrors('roles');
 
     $this->actingAs($manager)
-        ->put(route('admin.users.access.update', $target), ['roles' => [], 'permissions' => ['permissions.delete']])
+        ->put(route('admin.users.access.update', $target), ['roles' => [], 'permissions' => ['roles.delete']])
         ->assertSessionHasErrors('permissions');
 
     $this->actingAs($manager)
@@ -193,12 +193,12 @@ test('a limited manager can save a user whose unchanged access exceeds their own
     $manager = userWithPermissions(['users.view', 'users.update'], 'User Manager');
     Role::create(['name' => 'Viewer'])->syncPermissions(['users.view']);
     Role::create(['name' => 'Role Admin'])->syncPermissions(['roles.delete']);
-    $target = User::factory()->create()->assignRole('Role Admin')->givePermissionTo('permissions.delete');
+    $target = User::factory()->create()->assignRole('Role Admin')->givePermissionTo('roles.create');
 
     $this->actingAs($manager)
         ->put(route('admin.users.access.update', $target), [
             'roles' => ['Role Admin', 'Viewer'],
-            'permissions' => ['permissions.delete'],
+            'permissions' => ['roles.create'],
         ])
         ->assertSessionHasNoErrors();
 

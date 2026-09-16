@@ -1,10 +1,5 @@
 import { Checkbox } from '@/components/ui/checkbox';
-import {
-    actionLabel,
-    isDelegable,
-    permissionLabel,
-    resourceLabel,
-} from '@/lib/permissions';
+import { isDelegable, permissionLabel, resourceLabel } from '@/lib/permissions';
 import { cn } from '@/lib/utils';
 import type { DelegablePermissions, PermissionGroup } from '@/types';
 
@@ -19,7 +14,8 @@ type Props = {
 };
 
 /**
- * Permission checkboxes grouped by resource, with "select all" per group.
+ * Permission checkboxes grouped by resource, one card per resource with a
+ * "Select all / Deselect all" toggle.
  */
 export function PermissionGroups({
     groups,
@@ -54,7 +50,7 @@ export function PermissionGroups({
     }
 
     return (
-        <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
+        <div className="grid gap-4 lg:grid-cols-2">
             {groups.map((group) => {
                 const editable = readOnly
                     ? []
@@ -67,47 +63,36 @@ export function PermissionGroups({
                 const allEditableChecked =
                     editable.length > 0 &&
                     editable.every((name) => selectedSet.has(name));
-                const groupId = `${idPrefix}-group-${group.resource}`;
 
                 return (
                     <fieldset
                         key={group.resource}
-                        className="rounded-lg border p-3"
+                        aria-label={`${resourceLabel(group.resource)} permissions`}
+                        className="bg-card rounded-xl border"
                     >
-                        <div className="mb-2 flex items-center justify-between gap-2">
-                            <legend className="text-sm font-semibold">
+                        <div className="flex items-center justify-between gap-3 border-b px-4 py-3">
+                            <div className="flex items-center gap-2 text-sm font-semibold">
                                 {resourceLabel(group.resource)}
-                                <span className="text-muted-foreground ml-1.5 text-xs font-normal">
+                                <span className="bg-muted text-muted-foreground rounded-md px-1.5 py-0.5 text-xs font-medium tabular-nums">
                                     {checkedCount}/{group.permissions.length}
                                 </span>
-                            </legend>
+                            </div>
                             {editable.length > 0 && (
-                                <label
-                                    htmlFor={groupId}
-                                    className="text-muted-foreground flex cursor-pointer items-center gap-1.5 text-xs"
+                                <button
+                                    type="button"
+                                    onClick={() =>
+                                        toggle(editable, !allEditableChecked)
+                                    }
+                                    className="hover:bg-accent rounded-md px-2 py-1 text-sm font-medium transition-colors"
                                 >
-                                    <Checkbox
-                                        id={groupId}
-                                        checked={
-                                            allEditableChecked
-                                                ? true
-                                                : editable.some((name) =>
-                                                        selectedSet.has(name),
-                                                    )
-                                                  ? 'indeterminate'
-                                                  : false
-                                        }
-                                        onCheckedChange={(checked) =>
-                                            toggle(editable, checked === true)
-                                        }
-                                        aria-label={`Select all ${resourceLabel(group.resource)} permissions`}
-                                    />
-                                    Select all
-                                </label>
+                                    {allEditableChecked
+                                        ? 'Deselect all'
+                                        : 'Select all'}
+                                </button>
                             )}
                         </div>
 
-                        <div className="space-y-1">
+                        <div className="grid gap-x-6 gap-y-1 p-4 sm:grid-cols-2">
                             {group.permissions.map((permission) => {
                                 const id = `${idPrefix}-${permission.name}`;
                                 const disabled =
@@ -121,15 +106,16 @@ export function PermissionGroups({
                                         title={
                                             !readOnly && disabled
                                                 ? 'You can only grant permissions you have.'
-                                                : permissionLabel(
-                                                      permission.name,
-                                                  )
+                                                : permission.name
                                         }
                                         className={cn(
-                                            'hover:bg-accent/50 flex items-center gap-2 rounded-md px-1.5 py-1 text-sm',
+                                            'flex items-center gap-2.5 rounded-md py-1.5 text-sm',
                                             disabled
                                                 ? 'cursor-not-allowed'
                                                 : 'cursor-pointer',
+                                            disabled &&
+                                                !readOnly &&
+                                                'text-muted-foreground',
                                         )}
                                     >
                                         <Checkbox
@@ -145,19 +131,7 @@ export function PermissionGroups({
                                                 )
                                             }
                                         />
-                                        <span
-                                            className={cn(
-                                                'flex-1',
-                                                disabled &&
-                                                    !readOnly &&
-                                                    'text-muted-foreground',
-                                            )}
-                                        >
-                                            {actionLabel(permission.action)}
-                                        </span>
-                                        <code className="text-muted-foreground hidden font-mono text-[11px] sm:inline">
-                                            {permission.name}
-                                        </code>
+                                        {permissionLabel(permission.name)}
                                     </label>
                                 );
                             })}

@@ -41,13 +41,4 @@ Route::middleware(['auth', 'verified'])->prefix('admin')->name('admin.')->group(
     Route::get('permissions', [PermissionController::class, 'index'])
         ->middleware('can:permissions.view')
         ->name('permissions.index');
-    Route::post('permissions', [PermissionController::class, 'store'])
-        ->middleware('can:permissions.create')
-        ->name('permissions.store');
-    Route::put('permissions/{permission}', [PermissionController::class, 'update'])
-        ->middleware('can:permissions.update')
-        ->name('permissions.update');
-    Route::delete('permissions/{permission}', [PermissionController::class, 'destroy'])
-        ->middleware('can:permissions.delete')
-        ->name('permissions.destroy');
 });

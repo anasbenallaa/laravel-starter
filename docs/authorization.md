@@ -31,8 +31,11 @@ and Laravel's Gate. The system only knows about **users**, **roles** and
     php artisan permissions:sync
     ```
 
-    Removing an entry from the config never deletes the permission from the
-    database. Delete permissions explicitly from the Permissions page.
+    This is the only way permissions are created. The Permissions page is
+    read-only: there is no UI for creating, renaming or deleting them, because
+    code depends on the exact names. Removing an entry from the config never
+    deletes the permission. If a feature is retired, delete its permissions
+    with a migration.
 
 3. Protect the routes with the permission, never with a role:
 
@@ -87,9 +90,9 @@ Administrators can now build roles such as "Order Approver" from
       hold.
     - They can only grant or revoke direct permissions they hold.
     - Only roles and permissions that actually change are checked.
-- **Renaming permissions:** a permission assigned to a non-Admin role or to a
-  user can only be renamed by an Admin. A rename could otherwise turn a held
-  permission into one the code checks.
+- **Permissions are defined in code:** nobody, including Admins, can create,
+  rename or delete permissions over HTTP. `permissions:sync` rejects names
+  that don't follow `resource.action`.
 - **Atomic updates:** a user's roles and direct permissions are updated in one
   transaction.
 
