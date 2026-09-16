@@ -47,6 +47,46 @@ test('users are listed with roles and direct permissions, searchable and filtera
         );
 });
 
+test('the users list can be sorted by an allowed column, keeping filters in pagination links', function () {
+    $admin = createAdmin(['name' => 'Mia Admin', 'email' => 'mia@example.com']);
+    $this->travel(-2)->days();
+    User::factory()->create(['name' => 'Zed Older', 'email' => 'zed@example.com']);
+    $this->travelBack();
+    User::factory()->create(['name' => 'Abe Newest', 'email' => 'abe@example.com']);
+
+    $this->actingAs($admin)
+        ->get(route('admin.users.index'))
+        ->assertInertia(fn (Assert $page) => $page
+            ->where('sort', ['column' => 'name', 'direction' => 'asc'])
+            ->where('users.data.0.name', 'Abe Newest'),
+        );
+
+    $this->actingAs($admin)
+        ->get(route('admin.users.index', ['sort' => 'name', 'direction' => 'desc']))
+        ->assertInertia(fn (Assert $page) => $page->where('users.data.0.name', 'Zed Older'));
+
+    $this->actingAs($admin)
+        ->get(route('admin.users.index', ['sort' => 'created_at', 'direction' => 'asc']))
+        ->assertInertia(fn (Assert $page) => $page
+            ->where('sort', ['column' => 'created_at', 'direction' => 'asc'])
+            ->where('users.data.0.name', 'Zed Older'),
+        );
+
+    $this->actingAs($admin)
+        ->get(route('admin.users.index', ['sort' => 'password', 'direction' => 'desc']))
+        ->assertInertia(fn (Assert $page) => $page->where('sort', ['column' => 'name', 'direction' => 'desc']));
+
+    User::factory()->count(20)->create();
+
+    $this->actingAs($admin)
+        ->get(route('admin.users.index', ['sort' => 'email', 'direction' => 'desc', 'search' => 'example']))
+        ->assertInertia(fn (Assert $page) => $page
+            ->where('users.next_page_url', fn (string $url) => str_contains($url, 'sort=email')
+                && str_contains($url, 'direction=desc')
+                && str_contains($url, 'search=example')),
+        );
+});
+
 test('the users list is paginated', function () {
     $admin = createAdmin();
     User::factory()->count(25)->create();

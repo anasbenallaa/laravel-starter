@@ -3,6 +3,11 @@ import { useEffect, useRef, useState } from 'react';
 
 type Filters = Record<string, string | null>;
 
+type UpdateOptions = {
+    /** Visit right away instead of waiting for the debounce (e.g. clicks). */
+    immediate?: boolean;
+};
+
 /**
  * Keeps list filters in the query string (?search=john&role=Manager). Text
  * inputs are debounced; changing any filter resets to the first page.
@@ -14,6 +19,7 @@ export function useQueryFilters<T extends Filters>(
 ) {
     const [filters, setFilters] = useState<T>(initial);
     const isFirstRender = useRef(true);
+    const nextDelay = useRef(debounceMs);
 
     useEffect(() => {
         if (isFirstRender.current) {
@@ -21,6 +27,9 @@ export function useQueryFilters<T extends Filters>(
 
             return;
         }
+
+        const delay = nextDelay.current;
+        nextDelay.current = debounceMs;
 
         const timeout = setTimeout(() => {
             const query = Object.fromEntries(
@@ -34,13 +43,24 @@ export function useQueryFilters<T extends Filters>(
                 preserveScroll: true,
                 replace: true,
             });
-        }, debounceMs);
+        }, delay);
 
         return () => clearTimeout(timeout);
     }, [filters, url, debounceMs]);
 
-    const setFilter = <K extends keyof T>(key: K, value: T[K]) =>
-        setFilters((current) => ({ ...current, [key]: value }));
+    const update = (values: Partial<T>, options: UpdateOptions = {}) => {
+        if (options.immediate) {
+            nextDelay.current = 0;
+        }
 
-    return { filters, setFilter };
+        setFilters((current) => ({ ...current, ...values }));
+    };
+
+    const setFilter = <K extends keyof T>(
+        key: K,
+        value: T[K],
+        options?: UpdateOptions,
+    ) => update({ [key]: value } as unknown as Partial<T>, options);
+
+    return { filters, setFilter, setFilters: update };
 }

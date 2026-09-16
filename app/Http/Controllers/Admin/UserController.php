@@ -10,6 +10,7 @@ use App\Http\Controllers\Controller;
 use App\Http\Requests\Admin\StoreUserRequest;
 use App\Http\Requests\Admin\UpdateUserRequest;
 use App\Models\User;
+use App\Support\SortOrder;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Collection;
@@ -42,6 +43,12 @@ class UserController extends Controller
 
         $role = $roles->contains($request->query('role')) ? (string) $request->query('role') : null;
 
+        $sort = SortOrder::fromRequest($request, [
+            'name' => 'name',
+            'email' => 'email',
+            'created_at' => 'created_at',
+        ], default: 'name');
+
         $users = User::query()
             // roles.permissions lets canManageUser() work without extra queries.
             ->with(['roles:id,name', 'roles.permissions:id,name', 'permissions:id,name'])
@@ -49,7 +56,7 @@ class UserController extends Controller
                 ->whereLike('name', "%{$search}%")
                 ->orWhereLike('email', "%{$search}%")))
             ->when($role, fn ($query) => $query->whereHas('roles', fn ($query) => $query->where('name', $role)))
-            ->orderBy('name')
+            ->tap($sort->apply(...))
             ->paginate(self::PER_PAGE)
             ->withQueryString()
             ->through(fn (User $user) => [
@@ -68,6 +75,7 @@ class UserController extends Controller
             'users' => $users,
             'roles' => $roles->values(),
             'filters' => ['search' => $search, 'role' => $role],
+            'sort' => $sort->toArray(),
         ]);
     }
 
