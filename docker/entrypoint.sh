@@ -20,6 +20,9 @@ php artisan event:cache
 echo "🗄️  Running database migrations..."
 php artisan migrate --force --no-interaction
 
+echo "🔐 Synchronizing permissions..."
+php artisan permissions:sync --no-interaction
+
 echo "📊 Publishing Horizon assets..."
 php artisan horizon:publish --no-interaction 2>/dev/null || true
 

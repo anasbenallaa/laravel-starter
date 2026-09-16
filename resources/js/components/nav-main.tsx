@@ -12,22 +12,32 @@ import type { NavItem } from '@/types';
 
 export function NavMain({
     items,
+    label = 'Workspace',
     onNavigate,
 }: {
     items: NavItem[];
+    label?: string;
     onNavigate?: () => void;
 }) {
-    const { isCurrentUrl } = useCurrentUrl();
+    const { isCurrentUrl, isCurrentOrParentUrl } = useCurrentUrl();
+
+    if (items.length === 0) {
+        return null;
+    }
 
     return (
         <SidebarGroup className="px-2 py-0">
-            <SidebarGroupLabel>Platform</SidebarGroupLabel>
+            <SidebarGroupLabel>{label}</SidebarGroupLabel>
             <SidebarMenu>
                 {items.map((item) => (
                     <SidebarMenuItem key={item.title}>
                         <SidebarMenuButton
                             asChild
-                            isActive={isCurrentUrl(item.href)}
+                            isActive={
+                                item.permission
+                                    ? isCurrentOrParentUrl(item.href)
+                                    : isCurrentUrl(item.href)
+                            }
                             tooltip={{ children: item.title }}
                         >
                             <Link

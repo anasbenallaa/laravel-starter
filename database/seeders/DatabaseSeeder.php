@@ -2,6 +2,7 @@
 
 namespace Database\Seeders;
 
+use App\Authorization\SystemRole;
 use App\Models\User;
 use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 use Illuminate\Database\Seeder;
@@ -15,11 +16,14 @@ class DatabaseSeeder extends Seeder
      */
     public function run(): void
     {
+        $this->call(RoleAndPermissionSeeder::class);
+
         // User::factory(10)->create();
 
-        User::factory()->create([
-            'name' => 'Test User',
-            'email' => 'test@example.com',
-        ]);
+        // Local development user; firstOrCreate keeps db:seed re-runnable.
+        $user = User::query()->where('email', 'test@example.com')->first()
+            ?? User::factory()->create(['name' => 'Test User', 'email' => 'test@example.com']);
+
+        $user->assignRole(SystemRole::ADMIN);
     }
 }

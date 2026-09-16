@@ -1,10 +1,15 @@
 <?php
 
+use App\Actions\Authorization\SyncPermissions;
+use App\Authorization\SystemRole;
 use App\Contracts\NotificationServiceInterface;
 use App\Models\User;
 use App\Notifications\Data\NotificationData;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Notifications\DatabaseNotification;
+use Spatie\Permission\Models\Permission;
+use Spatie\Permission\Models\Role;
+use Spatie\Permission\PermissionRegistrar;
 use Tests\TestCase;
 
 /*
@@ -20,6 +25,7 @@ use Tests\TestCase;
 
 pest()->extend(TestCase::class)
     ->use(RefreshDatabase::class)
+    ->beforeEach(fn () => app(PermissionRegistrar::class)->forgetCachedPermissions())
     ->in('Feature');
 
 /*
@@ -70,4 +76,37 @@ function notifyUser(User $user, array $overrides = []): DatabaseNotification
     ]));
 
     return $user->notifications()->whereKeyNot($existing)->firstOrFail();
+}
+
+/**
+ * Seed the configured permissions and the Admin role.
+ */
+function seedAccessControl(): void
+{
+    app(SyncPermissions::class)->handle();
+}
+
+function createAdmin(array $attributes = []): User
+{
+    seedAccessControl();
+
+    return User::factory()->create($attributes)->assignRole(SystemRole::ADMIN);
+}
+
+/**
+ * A user holding the given permissions through a custom role.
+ *
+ * @param  list<string>  $permissions
+ */
+function userWithPermissions(array $permissions, string $roleName = 'Tester'): User
+{
+    seedAccessControl();
+
+    foreach ($permissions as $permission) {
+        Permission::findOrCreate($permission, 'web');
+    }
+
+    $role = Role::findOrCreate($roleName, 'web')->syncPermissions($permissions);
+
+    return User::factory()->create()->assignRole($role);
 }

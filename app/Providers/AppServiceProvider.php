@@ -2,11 +2,14 @@
 
 namespace App\Providers;
 
+use App\Authorization\SystemRole;
 use App\Contracts\NotificationServiceInterface;
+use App\Models\User;
 use App\Services\NotificationService;
 use Carbon\CarbonImmutable;
 use Illuminate\Support\Facades\Date;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\URL;
 use Illuminate\Support\ServiceProvider;
 use Illuminate\Validation\Rules\Password;
@@ -36,6 +39,17 @@ class AppServiceProvider extends ServiceProvider
     public function boot(): void
     {
         $this->configureDefaults();
+        $this->configureAuthorization();
+    }
+
+    /**
+     * Admins pass every Gate check (including permissions that were created
+     * after the role was last synced). Everyone else goes through their
+     * actual permissions and policies.
+     */
+    protected function configureAuthorization(): void
+    {
+        Gate::before(fn (mixed $user): ?bool => $user instanceof User && SystemRole::isAdmin($user) ? true : null);
     }
 
     /**

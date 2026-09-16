@@ -11,4 +11,6 @@ export type NavItem = {
     href: NonNullable<InertiaLinkProps['href']>;
     icon?: AppIcon | null;
     isActive?: boolean;
+    /** Only shown when the user has this permission. */
+    permission?: string;
 };

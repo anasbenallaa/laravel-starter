@@ -1,5 +1,8 @@
 import {
     Home09Icon,
+    Key01Icon,
+    UserGroupIcon,
+    UserShield01Icon,
     Logout01Icon,
     Moon02Icon,
     Notification03Icon,
@@ -10,8 +13,12 @@ import {
 } from '@hugeicons/core-free-icons';
 import { router } from '@inertiajs/react';
 import { useMemo } from 'react';
+import PermissionController from '@/actions/App/Http/Controllers/Admin/PermissionController';
+import RoleController from '@/actions/App/Http/Controllers/Admin/RoleController';
+import UserController from '@/actions/App/Http/Controllers/Admin/UserController';
 import type { AppIcon } from '@/components/ui/icon';
 import { useAppearance } from '@/hooks/use-appearance';
+import { useAuthorization } from '@/hooks/use-authorization';
 import { dashboard, logout } from '@/routes';
 import { index as notificationsIndex } from '@/routes/notifications';
 import { edit as editProfile } from '@/routes/profile';
@@ -35,6 +42,8 @@ export type SearchItem = {
     href?: string;
     /** Custom handler when the item is chosen (used for actions). */
     onSelect?: () => void;
+    /** Only listed when the user has this permission. */
+    permission?: string;
 };
 
 /**
@@ -43,95 +52,139 @@ export type SearchItem = {
  */
 export function useSearchItems(): SearchItem[] {
     const { updateAppearance } = useAppearance();
+    const { can } = useAuthorization();
 
     return useMemo<SearchItem[]>(
-        () => [
-            {
-                id: 'nav.dashboard',
-                title: 'Dashboard',
-                group: 'Navigation',
-                badge: 'Navigation',
-                description: 'Go to the main dashboard',
-                keywords: ['home', 'overview', 'start'],
-                icon: Home09Icon,
-                href: dashboard().url,
-            },
-            {
-                id: 'nav.notifications',
-                title: 'Notifications',
-                group: 'Navigation',
-                badge: 'Navigation',
-                description: 'View and manage your notifications',
-                keywords: ['alerts', 'inbox', 'unread', 'bell'],
-                icon: Notification03Icon,
-                href: notificationsIndex().url,
-            },
-            {
-                id: 'nav.profile',
-                title: 'Profile settings',
-                group: 'Settings',
-                badge: 'Settings',
-                description:
-                    'Update your name, email address, and profile picture',
-                keywords: ['account', 'avatar', 'name', 'email'],
-                icon: UserIcon,
-                href: editProfile().url,
-            },
-            {
-                id: 'nav.security',
-                title: 'Security settings',
-                group: 'Settings',
-                badge: 'Settings',
-                description:
-                    'Manage your password, two-factor authentication, and passkeys',
-                keywords: ['password', '2fa', 'two factor', 'passkey', 'mfa'],
-                icon: Shield01Icon,
-                href: editSecurity().url,
-            },
-            {
-                id: 'appearance.light',
-                title: 'Switch to light theme',
-                group: 'Appearance',
-                badge: 'Theme',
-                description: 'Use the light color scheme',
-                keywords: ['theme', 'mode', 'bright', 'day'],
-                icon: Sun03Icon,
-                onSelect: () => updateAppearance('light'),
-            },
-            {
-                id: 'appearance.dark',
-                title: 'Switch to dark theme',
-                group: 'Appearance',
-                badge: 'Theme',
-                description: 'Use the dark color scheme',
-                keywords: ['theme', 'mode', 'night'],
-                icon: Moon02Icon,
-                onSelect: () => updateAppearance('dark'),
-            },
-            {
-                id: 'appearance.system',
-                title: 'Match system theme',
-                group: 'Appearance',
-                badge: 'Theme',
-                description: 'Follow your operating system setting',
-                keywords: ['theme', 'mode', 'auto'],
-                icon: Settings01Icon,
-                onSelect: () => updateAppearance('system'),
-            },
-            {
-                id: 'action.logout',
-                title: 'Log out',
-                group: 'Account',
-                badge: 'Action',
-                description: 'End your session and return to the login screen',
-                keywords: ['sign out', 'exit', 'leave'],
-                icon: Logout01Icon,
-                onSelect: () => {
-                    router.flushAll();
-                    router.post(logout().url);
+        () =>
+            [
+                {
+                    id: 'nav.dashboard',
+                    title: 'Dashboard',
+                    group: 'Navigation',
+                    badge: 'Navigation',
+                    description: 'Go to the main dashboard',
+                    keywords: ['home', 'overview', 'start'],
+                    icon: Home09Icon,
+                    href: dashboard().url,
                 },
-            },
-        ],
-        [updateAppearance],
+                {
+                    id: 'nav.notifications',
+                    title: 'Notifications',
+                    group: 'Navigation',
+                    badge: 'Navigation',
+                    description: 'View and manage your notifications',
+                    keywords: ['alerts', 'inbox', 'unread', 'bell'],
+                    icon: Notification03Icon,
+                    href: notificationsIndex().url,
+                },
+                {
+                    id: 'admin.users',
+                    title: 'Users',
+                    group: 'Administration',
+                    badge: 'Admin',
+                    description:
+                        'View users and manage their roles and permissions',
+                    keywords: ['people', 'accounts', 'access', 'members'],
+                    icon: UserGroupIcon,
+                    href: UserController.index.url(),
+                    permission: 'users.view',
+                },
+                {
+                    id: 'admin.roles',
+                    title: 'Roles',
+                    group: 'Administration',
+                    badge: 'Admin',
+                    description: 'Create and edit roles and their permissions',
+                    keywords: ['rbac', 'access', 'groups'],
+                    icon: UserShield01Icon,
+                    href: RoleController.index.url(),
+                    permission: 'roles.view',
+                },
+                {
+                    id: 'admin.permissions',
+                    title: 'Permissions',
+                    group: 'Administration',
+                    badge: 'Admin',
+                    description:
+                        'Manage the permissions roles and users can be granted',
+                    keywords: ['rbac', 'access', 'capabilities', 'abilities'],
+                    icon: Key01Icon,
+                    href: PermissionController.index.url(),
+                    permission: 'permissions.view',
+                },
+                {
+                    id: 'nav.profile',
+                    title: 'Profile settings',
+                    group: 'Settings',
+                    badge: 'Settings',
+                    description:
+                        'Update your name, email address, and profile picture',
+                    keywords: ['account', 'avatar', 'name', 'email'],
+                    icon: UserIcon,
+                    href: editProfile().url,
+                },
+                {
+                    id: 'nav.security',
+                    title: 'Security settings',
+                    group: 'Settings',
+                    badge: 'Settings',
+                    description:
+                        'Manage your password, two-factor authentication, and passkeys',
+                    keywords: [
+                        'password',
+                        '2fa',
+                        'two factor',
+                        'passkey',
+                        'mfa',
+                    ],
+                    icon: Shield01Icon,
+                    href: editSecurity().url,
+                },
+                {
+                    id: 'appearance.light',
+                    title: 'Switch to light theme',
+                    group: 'Appearance',
+                    badge: 'Theme',
+                    description: 'Use the light color scheme',
+                    keywords: ['theme', 'mode', 'bright', 'day'],
+                    icon: Sun03Icon,
+                    onSelect: () => updateAppearance('light'),
+                },
+                {
+                    id: 'appearance.dark',
+                    title: 'Switch to dark theme',
+                    group: 'Appearance',
+                    badge: 'Theme',
+                    description: 'Use the dark color scheme',
+                    keywords: ['theme', 'mode', 'night'],
+                    icon: Moon02Icon,
+                    onSelect: () => updateAppearance('dark'),
+                },
+                {
+                    id: 'appearance.system',
+                    title: 'Match system theme',
+                    group: 'Appearance',
+                    badge: 'Theme',
+                    description: 'Follow your operating system setting',
+                    keywords: ['theme', 'mode', 'auto'],
+                    icon: Settings01Icon,
+                    onSelect: () => updateAppearance('system'),
+                },
+                {
+                    id: 'action.logout',
+                    title: 'Log out',
+                    group: 'Account',
+                    badge: 'Action',
+                    description:
+                        'End your session and return to the login screen',
+                    keywords: ['sign out', 'exit', 'leave'],
+                    icon: Logout01Icon,
+                    onSelect: () => {
+                        router.flushAll();
+                        router.post(logout().url);
+                    },
+                },
+            ].filter((item) => !item.permission || can(item.permission)),
+        [updateAppearance, can],
     );
 }

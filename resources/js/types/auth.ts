@@ -1,3 +1,5 @@
+import type { AuthAuthorization } from '@/types/authorization';
+
 export type User = {
     id: number;
     name: string;
@@ -12,7 +14,7 @@ export type User = {
 
 export type Auth = {
     user: User;
-};
+} & AuthAuthorization;
 
 export type Passkey = {
     id: number;

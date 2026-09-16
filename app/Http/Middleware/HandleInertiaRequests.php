@@ -2,9 +2,12 @@
 
 namespace App\Http\Middleware;
 
+use App\Authorization\SystemRole;
 use App\Http\Resources\NotificationResource;
+use App\Models\User;
 use Illuminate\Http\Request;
 use Inertia\Middleware;
+use Spatie\Permission\PermissionRegistrar;
 
 class HandleInertiaRequests extends Middleware
 {
@@ -41,9 +44,36 @@ class HandleInertiaRequests extends Middleware
             'name' => config('app.name'),
             'auth' => [
                 'user' => $request->user(),
+                ...$this->authorization($request->user()),
             ],
             'sidebarOpen' => ! $request->hasCookie('sidebar_state') || $request->cookie('sidebar_state') === 'true',
             'notificationSummary' => fn () => $this->notificationSummary($request),
+        ];
+    }
+
+    /**
+     * The current user's role names and permission names, for hiding UI the
+     * user can't use. Never trusted by the backend. Admins receive every
+     * permission name from Spatie's cache, so no extra query is needed.
+     *
+     * @return array{roles: array<int, string>, permissions: array<int, string>, isAdmin: bool}
+     */
+    protected function authorization(?User $user): array
+    {
+        if (! $user) {
+            return ['roles' => [], 'permissions' => [], 'isAdmin' => false];
+        }
+
+        $isAdmin = SystemRole::isAdmin($user);
+
+        $permissions = $isAdmin
+            ? app(PermissionRegistrar::class)->getPermissions()->pluck('name')
+            : $user->getAllPermissions()->pluck('name');
+
+        return [
+            'roles' => $user->getRoleNames()->map(fn ($name) => (string) $name)->values()->all(),
+            'permissions' => $permissions->map(fn ($name) => (string) $name)->sort()->values()->all(),
+            'isAdmin' => $isAdmin,
         ];
     }
 
