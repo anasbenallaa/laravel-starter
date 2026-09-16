@@ -43,6 +43,7 @@ const PERSONAL_URIS = [
  */
 const CONTROLLER_AUTHORIZED_ROUTES = [
     'admin.roles.index' => ['roles.view', 'permissions.view'],
+    'search' => ['users.view', 'roles.view', 'permissions.view'],
 ];
 
 /** Authentication flows provided by packages; not application features. */

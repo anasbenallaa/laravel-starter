@@ -296,7 +296,12 @@ everywhere:
 
 - `const { can, canAny } = useAuthorization();` hides UI the user can't use. This is **UX only**; routes and Form Requests must enforce the same permissions (`can:` middleware).
 - **Sidebar:** add a `NavItem` with `permission` (a string, or an array meaning "any of") to `components/app-sidebar.tsx`, under **Workspace** or **Administration**.
-- **Global search:** add the page to `hooks/use-search-items.tsx` with the same `permission`.
+- **Global search (pages):** add the page to `hooks/use-search-items.tsx` with the same `permission`.
+- **Global search (records):** the palette (⌘K) also searches records on the server, grouped as Users, Roles and Permissions, with at most 5 results per group. To make a module's records searchable:
+    1. Implement `App\Search\SearchProvider`: `key()`, `label()`, `permission()` and `search($user, $term, $limit)` returning `SearchResult`s with a title, a short description, an `href` the user may open, and an icon name.
+    2. Add the class to `GlobalSearch::PROVIDERS`, and add its permission to the `search` entry in `CONTROLLER_AUTHORIZED_ROUTES` (`RoutePermissionsTest`).
+    3. Map the icon name in `hooks/use-remote-search.ts` and add the permission to `SEARCH_PERMISSIONS` there.
+    4. Test: matches, the 5-result limit, and that users without the permission don't get the group.
 - **New permissions (required for every feature):** follow "Every new feature needs permissions" in `docs/authorization.md`. `RoutePermissionsTest` fails when a route isn't protected.
 
 ## 8. Checklist before finishing a page

@@ -80,6 +80,30 @@ $notifications->sendToMany(
 );
 ```
 
+## Previewing the design with demo notifications
+
+`notifications:demo` sends 10 sample notifications to a user, so you can check
+the bell dropdown and the notifications page. The samples cover every level
+(info, success, warning, error), several icons, action links, actors, a long
+message and a notification with no icon. They are spread from "Just now" back
+to last week, and the oldest 3 are marked as read.
+
+```bash
+php artisan notifications:demo                                 # first user
+php artisan notifications:demo admin@example.com               # by email (or ID)
+php artisan notifications:demo --level=error --read=0          # only error samples, all unread
+php artisan notifications:demo --count=3 --now                 # 3 samples, all at the current time
+php artisan notifications:demo --queued                        # through the queue like the app (needs Horizon/worker)
+```
+
+With Docker, run it inside the app container:
+`docker compose -f docker-compose.local.yml exec app php artisan notifications:demo you@example.com`.
+
+- By default notifications are delivered immediately (no queue worker needed).
+- The command refuses to run in production unless `--force` is passed.
+- Use **Clear read** or **Mark all as read** on the notifications page to reset
+  between runs.
+
 ## Payload reference
 
 | Field                               | Required | Notes                                                                                                              |

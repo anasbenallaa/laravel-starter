@@ -207,6 +207,7 @@ ThingsIndex.layout = () => ({
 ## Step 4: navigation and permissions
 
 - **Destination pages:** add a `NavItem` with `permission` to `components/app-sidebar.tsx` (the **Workspace** or **Administration** group), and a matching entry in `hooks/use-search-items.tsx`.
+- **Searchable records:** if users need to find individual records (e.g. an order by number), add an `App\Search\SearchProvider` (see "Global search (records)" in `docs/ui-guidelines.md`). The palette shows at most 5 per group.
 - **Hiding UI:** use `useAuthorization().can()` for buttons and menu items. The server must enforce the same permission.
 
 ## Step 5: icons

@@ -104,7 +104,13 @@ export default function RolesPermissions({
         RoleController.index.url(),
         filters,
     );
-    const [permissionSearch, setPermissionSearch] = useState('');
+    // Global search links here with ?permission=<name> to pre-fill the filter.
+    const [permissionSearch, setPermissionSearch] = useState(() =>
+        typeof window !== 'undefined'
+            ? (new URLSearchParams(window.location.search).get('permission') ??
+              '')
+            : '',
+    );
     const [resource, setResource] = useState<string | null>(null);
     const [deleting, setDeleting] = useState<RoleListItem | null>(null);
     const [processing, setProcessing] = useState(false);

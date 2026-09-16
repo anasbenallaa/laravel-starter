@@ -3,6 +3,7 @@ import { router } from '@inertiajs/react';
 import * as DialogPrimitive from '@radix-ui/react-dialog';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { Icon } from '@/components/ui/icon';
+import { useRemoteSearch } from '@/hooks/use-remote-search';
 import { type SearchItem, useSearchItems } from '@/hooks/use-search-items';
 import { cn } from '@/lib/utils';
 
@@ -108,7 +109,12 @@ export function GlobalSearch({
     const listRef = useRef<HTMLDivElement>(null);
 
     const items = useSearchItems();
-    const groups = useMemo(() => groupResults(items, query), [items, query]);
+    const remote = useRemoteSearch(query, open);
+    // Pages and actions first, then users, roles, permissions from the server.
+    const groups = useMemo(
+        () => [...groupResults(items, query), ...remote.groups],
+        [items, query, remote.groups],
+    );
     const flat = useMemo(
         () => groups.flatMap((group) => group.items),
         [groups],
@@ -221,7 +227,7 @@ export function GlobalSearch({
                             value={query}
                             onChange={(event) => setQuery(event.target.value)}
                             onKeyDown={onInputKeyDown}
-                            placeholder="Search resources, paths, everything…"
+                            placeholder="Search pages, users, roles, permissions…"
                             className="placeholder:text-muted-foreground h-14 flex-1 bg-transparent text-sm outline-none"
                             autoComplete="off"
                             spellCheck={false}
@@ -239,8 +245,9 @@ export function GlobalSearch({
                     >
                         {flat.length === 0 ? (
                             <p className="text-muted-foreground px-3 py-10 text-center text-sm">
-                                No results
-                                {query ? ` for “${query.trim()}”` : ''}.
+                                {remote.loading
+                                    ? 'Searching…'
+                                    : `No results${query ? ` for “${query.trim()}”` : ''}.`}
                             </p>
                         ) : (
                             groups.map((group) => (
