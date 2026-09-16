@@ -35,6 +35,11 @@ export function useQueryFilters<T extends Filters>(
             return;
         }
 
+        // Nothing to navigate to (e.g. a DataTable with only local filters).
+        if (!url) {
+            return;
+        }
+
         const delay = nextDelay.current;
         nextDelay.current = debounceMs;
 

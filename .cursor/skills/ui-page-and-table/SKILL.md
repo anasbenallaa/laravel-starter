@@ -27,13 +27,13 @@ those rules; don't deviate from them.
 
 Then read one existing page of the same kind and copy its structure:
 
-| Building                        | Reference                                                                                          |
-| ------------------------------- | -------------------------------------------------------------------------------------------------- |
-| Paginated table page            | `resources/js/pages/admin/users/index.tsx` + `app/Http/Controllers/Admin/UserController.php@index` |
-| Create / edit form              | `resources/js/pages/admin/users/{create,edit}.tsx` + `resources/js/components/users/user-form.tsx` |
-| Card grid with view toggle      | `resources/js/pages/admin/roles/index.tsx`                                                         |
-| Grouped checkbox form           | `resources/js/components/authorization/role-form.tsx`                                              |
-| Form that stays open after save | `resources/js/pages/admin/users/access.tsx`                                                        |
+| Building                                        | Reference                                                                                          |
+| ----------------------------------------------- | -------------------------------------------------------------------------------------------------- |
+| Paginated table page                            | `resources/js/pages/admin/users/index.tsx` + `app/Http/Controllers/Admin/UserController.php@index` |
+| Create / edit form                              | `resources/js/pages/admin/users/{create,edit}.tsx` + `resources/js/components/users/user-form.tsx` |
+| Table with view tabs, local rows and group rows | `resources/js/pages/admin/roles/index.tsx`                                                         |
+| Grouped checkbox form                           | `resources/js/components/authorization/role-form.tsx`                                              |
+| Form that stays open after save                 | `resources/js/pages/admin/users/access.tsx`                                                        |
 
 ## Step 1: backend (controller, routes, requests)
 

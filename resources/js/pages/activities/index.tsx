@@ -60,26 +60,11 @@ export default function Activities({
         filters.from ||
         filters.to,
     );
-    const selectedUser = users.find((user) => user.id === filters.user);
-
     return (
         <>
             <Head title="Activities" />
 
-            <div className="mx-auto flex w-full max-w-4xl flex-col gap-6 p-4 md:p-6">
-                <div className="space-y-1">
-                    <h1 className="text-xl font-semibold tracking-tight">
-                        {selectedUser
-                            ? `Activities · ${selectedUser.name}`
-                            : 'Activities'}
-                    </h1>
-                    <p className="text-muted-foreground text-sm">
-                        {canViewAll
-                            ? 'A chronological history of user activity across the system.'
-                            : 'A history of actions performed from your account.'}
-                    </p>
-                </div>
-
+            <div className="flex w-full flex-col gap-4 p-4 md:p-6">
                 <div className="bg-card flex flex-col gap-2 rounded-xl border p-3 md:flex-row md:flex-wrap md:items-center">
                     <div className="relative flex-1 md:min-w-56">
                         <Icon

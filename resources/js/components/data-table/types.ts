@@ -25,21 +25,33 @@ export type DataTableFilterOption = {
     label: string;
 };
 
-/** A single-choice filter kept in the query string as ?{key}=value. */
+/**
+ * A single-choice filter. By default it lives in the query string as
+ * ?{key}=value (server-side). Pass onChange to filter in the browser instead.
+ */
 export type DataTableFilter = {
     key: string;
     label: string;
-    /** Current value from the server; null means "all". */
+    /** Current value; null means "all". */
     value: string | null;
     options: DataTableFilterOption[];
     /** Label of the "no filter" choice, e.g. "All roles". */
     allLabel?: string;
+    /** Local (client-side) filter: called instead of updating the URL. */
+    onChange?: (value: string | null) => void;
 };
 
 export type DataTableSearch = {
-    /** Current value from the server. */
+    /** Current value. */
     value: string;
     placeholder?: string;
+    /** Local (client-side) search: called instead of updating the URL. */
+    onChange?: (value: string) => void;
+};
+
+export type DataTableTab = {
+    value: string;
+    label: string;
 };
 
 export type DataTableSortDirection = 'asc' | 'desc';

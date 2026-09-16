@@ -129,6 +129,16 @@ const columns: DataTableColumn<Order>[] = [
 - The main identifying cell gets a minimum width (e.g. `min-w-48`), so it stays readable on mobile. The table scrolls sideways inside its card.
 - **Row actions:** one primary outline button if needed (e.g. "Manage access"), plus a `MoreHorizontalIcon` dropdown for Edit and Delete. Hide actions the user can't perform.
 
+### Views, local data and groups
+
+The same `DataTable` covers pages with several views and non-paginated data.
+`pages/admin/roles/index.tsx` is the reference:
+
+- **Tabs:** `tabs`, `activeTab` and `onTabChange` render view buttons in the header, e.g. Roles / Matrix / Permissions. Render one `DataTable` per view with a `key` so each view keeps its own state, and keep the active view in `?view=`.
+- **Local mode:** pass `rows` instead of `paginator` for small, already-loaded lists. Give `search` and each filter an `onChange` and filter the rows yourself. The footer shows a count instead of pagination.
+- **Group rows:** pass `groupBy` (and optionally `groupLabel`) to render section rows, e.g. permissions grouped by resource. Rows must already be sorted by group.
+- **Don't:** build card grids, custom tables or separate view switchers for list data; use `DataTable`.
+
 ### Backend contract
 
 ```php
