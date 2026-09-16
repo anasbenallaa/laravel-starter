@@ -1,6 +1,7 @@
 import { ArrowRight01Icon, MoreHorizontalIcon } from "@hugeicons/core-free-icons"
 import { Slot } from "@radix-ui/react-slot"
 import * as React from "react"
+import { useTranslation } from "react-i18next"
 
 import { Icon } from "@/components/ui/icon"
 import { cn } from "@/lib/utils"
@@ -76,7 +77,9 @@ function BreadcrumbSeparator({
       className={cn("[&>svg]:size-3.5", className)}
       {...props}
     >
-      {children ?? <Icon iconNode={ArrowRight01Icon} />}
+      {children ?? (
+        <Icon iconNode={ArrowRight01Icon} className="rtl:rotate-180" />
+      )}
     </li>
   )
 }
@@ -85,6 +88,8 @@ function BreadcrumbEllipsis({
   className,
   ...props
 }: React.ComponentProps<"span">) {
+  const { t } = useTranslation()
+
   return (
     <span
       data-slot="breadcrumb-ellipsis"
@@ -94,7 +99,7 @@ function BreadcrumbEllipsis({
       {...props}
     >
       <Icon iconNode={MoreHorizontalIcon} className="size-4" />
-      <span className="sr-only">More</span>
+      <span className="sr-only">{t("common.more")}</span>
     </span>
   )
 }

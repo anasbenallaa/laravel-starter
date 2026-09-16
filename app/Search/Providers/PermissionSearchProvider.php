@@ -17,7 +17,7 @@ class PermissionSearchProvider implements SearchProvider
 
     public function label(): string
     {
-        return 'Permissions';
+        return __('search.group.permissions');
     }
 
     public function permission(): string
@@ -37,7 +37,7 @@ class PermissionSearchProvider implements SearchProvider
             ->map(fn (Permission $permission) => new SearchResult(
                 id: "permission-{$permission->id}",
                 title: (string) $permission->name,
-                description: "Used by {$permission->roles_count} ".str('role')->plural($permission->roles_count),
+                description: __('permissions.label.'.$permission->name).' · '.trans_choice('search.result.used_by_roles', $permission->roles_count),
                 href: route('admin.roles.index', ['view' => 'permissions', 'permission' => $permission->name], absolute: false),
                 icon: 'permission',
             ))

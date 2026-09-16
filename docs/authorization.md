@@ -66,6 +66,16 @@ data, and say why in a comment.
     'orders' => ['view', 'create', 'update', 'delete', 'approve'],
     ```
 
+    Give each permission a translated label (and its resource a name) in
+    every `lang/*.json` file; the identifiers themselves are never translated:
+
+    ```json
+    "permissions.resource.orders": "Orders",
+    "permissions.label.orders.approve": "Approve orders"
+    ```
+
+    `TranslationFilesTest` fails when a configured permission has no label.
+
 2. Create them. This also grants them to Admin, and the Docker entrypoint
    runs it on every deploy:
 

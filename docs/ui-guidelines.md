@@ -16,6 +16,7 @@ page.
 - React 19, Inertia v3, TypeScript, Tailwind CSS v4 and shadcn/ui (`resources/js/components/ui`).
 - Routes come from Wayfinder: `@/actions/...` (controller actions) and `@/routes/...` (named routes). Never hardcode URLs.
 - Icons are **HugeIcons only**. Don't add `lucide-react` or another icon library.
+- Text is translated with i18next (`t('key')`) from `lang/*.json`, and every page supports right-to-left. See section 9 and [`docs/localization.md`](localization.md).
 
 ## 1. Page anatomy
 
@@ -24,23 +25,28 @@ Every authenticated page is a file in `resources/js/pages/**`. The app layout
 
 ```tsx
 export default function OrdersIndex(props: Props) {
+    const { t } = useTranslation();
+
     return (
         <>
-            <Head title="Orders" />
+            <Head title={t('navigation.orders')} />
             <div className="p-4 md:p-6">{/* content */}</div>
         </>
     );
 }
 
 OrdersIndex.layout = () => ({
-    breadcrumbs: [{ title: 'Orders', href: OrderController.index() }],
+    // Breadcrumb titles are translation keys (literal: true for data).
+    breadcrumbs: [
+        { title: 'navigation.orders', href: OrderController.index() },
+    ],
 });
 ```
 
 | Rule         | Details                                                                                                                                                                                                                            |
 | ------------ | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | Page padding | `p-4 md:p-6` on the outer wrapper. Stack blocks with `flex flex-col gap-6`.                                                                                                                                                        |
-| Title        | Always set `<Head title="…" />`.                                                                                                                                                                                                   |
+| Title        | Always set `<Head title={t('…')} />`.                                                                                                                                                                                              |
 | Breadcrumbs  | Always set them through `Page.layout`. Each level links to its page.                                                                                                                                                               |
 | Back buttons | **Don't add them.** The breadcrumbs handle navigation back.                                                                                                                                                                        |
 | Page heading | A list page puts its title inside the `DataTable` header. Any other page with a heading uses `h1.text-xl.font-semibold.tracking-tight` plus a `p.text-muted-foreground.text-sm` description, with its primary action on the right. |
@@ -338,7 +344,30 @@ Users see their own history there, and administrators see everyone's. See
 - **Tests:** assert the activity in the feature test, e.g. `Activity::where('action', 'exported')->sole()`.
 - **Guard test:** `AuditableModelsTest` fails when a model in `app/Models` isn't `Auditable`. Only allowlist a model that users never change, and say why.
 
-## 9. Checklist before finishing a page
+## 9. Text, translations and right-to-left (required)
+
+Every string is translated (English, French, Arabic) and every layout works
+right-to-left. Full rules: [`docs/localization.md`](localization.md).
+
+- **No hardcoded text:** titles, labels, placeholders, aria-labels, empty
+  states, toasts and dialog text use `t('area.key')`; server messages use
+  `__('area.key')`. Add each key to `lang/en.json`, `lang/fr.json` and
+  `lang/ar.json` (plural keys need each language's forms).
+- **Static layout config** stores keys: breadcrumbs
+  `{ title: 'navigation.orders', href }`, or `{ title: order.number, href, literal: true }` for data.
+- **`DataTable`:** translated `title`, `header`, `placeholder`, filter
+  `label`/`allLabel`, `emptyMessage`, and `countLabel={(count) => t('orders.count', { count })}`;
+  action columns use `align: 'end'`.
+- **Dates and numbers:** `useFormatters()` (`relativeTime`, `dateTime`, `date`,
+  `number`), never `toLocaleString()`.
+- **RTL:** logical classes only (`ms-`/`me-`, `ps-`/`pe-`, `start-`/`end-`,
+  `text-start`/`text-end`, `border-s`/`border-e`, `gap` instead of `space-x`);
+  forward/back arrows and chevrons get `rtl:rotate-180`; emails, IPs, URLs and
+  identifiers are wrapped in `<Ltr>`; direction logic uses `useLocale().isRtl`.
+- **Data stays as-is:** never translate names, emails, role names or
+  identifiers; show a translated label beside identifiers.
+
+## 10. Checklist before finishing a page
 
 - [ ] `<Head title>`, breadcrumbs, `p-4 md:p-6`, and no back button.
 - [ ] Lists use `DataTable`, with server-side search, filters, `SortOrder` and pagination.
@@ -348,5 +377,7 @@ Users see their own history there, and administrators see everyone's. See
 - [ ] Buttons and links hidden with `can()`, and the same permission enforced on the server.
 - [ ] Every create, update, delete and action is recorded in the activity log (`Auditable` model, or `ActivityLoggerInterface`), with a test.
 - [ ] Sidebar and global search entries added if the page is a destination.
-- [ ] Looks right in dark mode and at 390px wide.
+- [ ] Every visible string, placeholder, aria-label and toast is a translation key present in all `lang/*.json` files; dates and numbers use `useFormatters()`.
+- [ ] Logical (RTL-safe) classes, flipped directional icons, `<Ltr>` for technical values.
+- [ ] Looks right in dark mode and at 390px wide, in English, French and Arabic (RTL).
 - [ ] `php artisan wayfinder:generate`, `npx vp check --fix`, `npx tsc --noEmit`, `npm run build` and `php artisan test` all pass.

@@ -79,7 +79,7 @@ class UserAccessController extends Controller
             $log->userPermissions($user, $permissionsBefore, (array) $request->validated('permissions'));
         });
 
-        Inertia::flash('toast', ['type' => 'success', 'message' => __('User access updated successfully.')]);
+        Inertia::flash('toast', ['type' => 'success', 'message' => __('flash.user_access_updated')]);
 
         return to_route('admin.users.access.edit', $user);
     }

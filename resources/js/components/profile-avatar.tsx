@@ -1,5 +1,6 @@
 import { router } from '@inertiajs/react';
 import { type ChangeEvent, useRef, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import InputError from '@/components/input-error';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
@@ -18,6 +19,7 @@ export default function ProfileAvatar({ user }: { user: User }) {
     const inputRef = useRef<HTMLInputElement>(null);
     const [error, setError] = useState<string>();
     const [busy, setBusy] = useState(false);
+    const { t } = useTranslation();
 
     const onFile = (event: ChangeEvent<HTMLInputElement>) => {
         const file = event.target.files?.[0];
@@ -30,7 +32,7 @@ export default function ProfileAvatar({ user }: { user: User }) {
         setError(undefined);
 
         if (file.size > MAX_BYTES) {
-            setError('The image must not be larger than 1MB.');
+            setError(t('settings.profile.avatar_too_large'));
             return;
         }
 
@@ -85,7 +87,9 @@ export default function ProfileAvatar({ user }: { user: User }) {
                         onClick={() => inputRef.current?.click()}
                         data-test="avatar-browse-button"
                     >
-                        {busy ? 'Uploading…' : 'Browse…'}
+                        {busy
+                            ? t('settings.profile.avatar_uploading')
+                            : t('settings.profile.avatar_browse')}
                     </Button>
 
                     {user.avatar ? (
@@ -98,7 +102,7 @@ export default function ProfileAvatar({ user }: { user: User }) {
                             onClick={remove}
                             data-test="avatar-remove-button"
                         >
-                            Remove
+                            {t('common.remove')}
                         </Button>
                     ) : null}
                 </div>

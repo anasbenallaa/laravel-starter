@@ -2,9 +2,15 @@
 
 use App\Http\Controllers\ActivityController;
 use App\Http\Controllers\GlobalSearchController;
+use App\Http\Controllers\LocaleController;
 use Illuminate\Support\Facades\Route;
 
 Route::redirect('/', '/login')->name('home');
+
+// Interface language (guests and users). Validated against config/locales.php.
+Route::post('locale', [LocaleController::class, 'update'])
+    ->middleware('throttle:30,1')
+    ->name('locale.update');
 
 Route::middleware(['auth', 'verified'])->group(function () {
     Route::inertia('dashboard', 'dashboard')->name('dashboard');

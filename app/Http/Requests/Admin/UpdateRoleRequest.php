@@ -39,7 +39,7 @@ class UpdateRoleRequest extends FormRequest
                 $role = $this->role();
 
                 if (SystemRole::isSystem($role)) {
-                    $validator->errors()->add('role', __('The Admin role is a system role and cannot be modified.'));
+                    $validator->errors()->add('role', __('errors.roles.system_immutable'));
 
                     return;
                 }
@@ -47,7 +47,7 @@ class UpdateRoleRequest extends FormRequest
                 $delegation = app(PermissionDelegation::class);
 
                 if (! $delegation->canManageRole($this->user(), $role)) {
-                    $validator->errors()->add('role', __('You can only edit roles whose permissions you have.'));
+                    $validator->errors()->add('role', __('errors.roles.edit_requires_permissions'));
 
                     return;
                 }
@@ -55,7 +55,7 @@ class UpdateRoleRequest extends FormRequest
                 $undelegable = $delegation->undelegable($this->user(), (array) $this->input('permissions', []));
 
                 if ($undelegable !== []) {
-                    $validator->errors()->add('permissions', __('You cannot grant permissions you do not have: :permissions.', [
+                    $validator->errors()->add('permissions', __('errors.roles.grant_not_owned', [
                         'permissions' => implode(', ', $undelegable),
                     ]));
                 }

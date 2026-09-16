@@ -1,9 +1,11 @@
 import { Head, useForm } from '@inertiajs/react';
+import { useTranslation } from 'react-i18next';
 import UserAccessController from '@/actions/App/Http/Controllers/Admin/UserAccessController';
 import UserController from '@/actions/App/Http/Controllers/Admin/UserController';
 import { PermissionGroups } from '@/components/authorization/permission-groups';
 import { SystemRoleBadge } from '@/components/authorization/role-badge';
 import InputError from '@/components/input-error';
+import { Ltr } from '@/components/ltr';
 import {
     Card,
     CardContent,
@@ -41,6 +43,7 @@ export default function UserAccess({
     delegablePermissions,
     isLastAdmin,
 }: Props) {
+    const { t } = useTranslation();
     // Sorted, so toggling a value back matches the defaults again (isDirty).
     const form = useForm({
         roles: [...assigned.roles].sort(),
@@ -78,7 +81,7 @@ export default function UserAccess({
 
     return (
         <>
-            <Head title={`Manage access · ${user.name}`} />
+            <Head title={t('users.access.head', { name: user.name })} />
 
             <form
                 onSubmit={submit}
@@ -101,10 +104,9 @@ export default function UserAccess({
 
                 <Card>
                     <CardHeader>
-                        <CardTitle>Roles</CardTitle>
+                        <CardTitle>{t('users.form.roles_title')}</CardTitle>
                         <CardDescription>
-                            The user inherits every permission of each assigned
-                            role.
+                            {t('users.access.roles_description')}
                         </CardDescription>
                     </CardHeader>
                     <CardContent className="space-y-3">
@@ -152,14 +154,24 @@ export default function UserAccess({
                                             </span>
                                             <span className="text-muted-foreground block text-xs">
                                                 {role.is_system
-                                                    ? 'Full access to everything'
-                                                    : `${role.permissions.length} ${role.permissions.length === 1 ? 'permission' : 'permissions'}`}
+                                                    ? t('roles.full_access')
+                                                    : t('permissions.count', {
+                                                          count: role
+                                                              .permissions
+                                                              .length,
+                                                      })}
                                                 {lockedAdmin &&
-                                                    ' · Last administrator'}
+                                                    ` · ${t('roles.last_admin')}`}
                                                 {!role.assignable &&
-                                                    (role.is_system
-                                                        ? ' · Only an administrator can change this'
-                                                        : ' · Includes permissions you do not have')}
+                                                    ` · ${
+                                                        role.is_system
+                                                            ? t(
+                                                                  'roles.only_admin_can_change',
+                                                              )
+                                                            : t(
+                                                                  'roles.includes_missing_permissions',
+                                                              )
+                                                    }`}
                                             </span>
                                         </span>
                                     </label>
@@ -172,11 +184,9 @@ export default function UserAccess({
 
                 <Card>
                     <CardHeader>
-                        <CardTitle>Direct permissions</CardTitle>
+                        <CardTitle>{t('users.access.direct_title')}</CardTitle>
                         <CardDescription>
-                            Granted to this user individually, in addition to
-                            their roles. Permissions inherited from roles are
-                            not listed here.
+                            {t('users.access.direct_description')}
                         </CardDescription>
                     </CardHeader>
                     <CardContent className="space-y-3">
@@ -195,26 +205,26 @@ export default function UserAccess({
 
                 <Card>
                     <CardHeader>
-                        <CardTitle>Effective permissions</CardTitle>
+                        <CardTitle>
+                            {t('users.access.effective_title')}
+                        </CardTitle>
                         <CardDescription>
-                            Everything this user can do with the selection
-                            above: role permissions plus direct permissions.
-                            Read-only.
+                            {t('users.access.effective_description')}
                         </CardDescription>
                     </CardHeader>
                     <CardContent>
                         {isAdmin ? (
                             <p className="text-sm">
                                 <span className="font-medium">
-                                    All permissions.
+                                    {t('users.access.all_permissions')}
                                 </span>{' '}
                                 <span className="text-muted-foreground">
-                                    Administrators pass every permission check.
+                                    {t('users.access.admin_passes')}
                                 </span>
                             </p>
                         ) : effectivePermissions.length === 0 ? (
                             <p className="text-muted-foreground text-sm">
-                                This user has no permissions.
+                                {t('users.access.no_permissions')}
                             </p>
                         ) : (
                             <ul className="flex flex-wrap gap-1.5">
@@ -223,13 +233,15 @@ export default function UserAccess({
                                         key={permission}
                                         className="bg-muted flex items-center gap-1.5 rounded-md px-2 py-1 font-mono text-xs"
                                     >
-                                        {permission}
+                                        <Ltr>{permission}</Ltr>
                                         <span className="text-muted-foreground font-sans text-[10px]">
                                             {inheritedPermissions.has(
                                                 permission,
                                             )
-                                                ? 'role'
-                                                : 'direct'}
+                                                ? t('users.access.source_role')
+                                                : t(
+                                                      'users.access.source_direct',
+                                                  )}
                                         </span>
                                     </li>
                                 ))}
@@ -240,7 +252,7 @@ export default function UserAccess({
                 <UnsavedChangesBar
                     visible={form.isDirty}
                     processing={form.processing}
-                    saveLabel="Save access"
+                    saveLabel={t('users.access.save')}
                     onReset={() => {
                         form.reset();
                         form.clearErrors();
@@ -253,10 +265,11 @@ export default function UserAccess({
 
 UserAccess.layout = (props: Props) => ({
     breadcrumbs: [
-        { title: 'Users', href: UserController.index() },
+        { title: 'navigation.users', href: UserController.index() },
         {
             title: props.user.name,
             href: UserAccessController.edit(props.user.id),
+            literal: true,
         },
     ],
 });

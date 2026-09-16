@@ -1,4 +1,5 @@
 import type { Auth } from '@/types/auth';
+import type { Localization } from '@/types/localization';
 import type { NotificationSummary } from '@/types/notifications';
 
 declare module 'react' {
@@ -13,6 +14,7 @@ declare module '@inertiajs/core' {
             name: string;
             auth: Auth;
             sidebarOpen: boolean;
+            localization: Localization;
             /** Null for guests. */
             notificationSummary: NotificationSummary | null;
             [key: string]: unknown;

@@ -4,6 +4,7 @@ import {
     Search01Icon,
 } from '@hugeicons/core-free-icons';
 import { Head, InfiniteScroll } from '@inertiajs/react';
+import { useTranslation } from 'react-i18next';
 import ActivityController from '@/actions/App/Http/Controllers/ActivityController';
 import { ActivityItem } from '@/components/activities/activity-item';
 import { Button } from '@/components/ui/button';
@@ -39,6 +40,7 @@ export default function Activities({
     actions,
     users,
 }: Props) {
+    const { t } = useTranslation();
     const {
         filters: current,
         setFilter,
@@ -76,16 +78,18 @@ export default function Activities({
 
     return (
         <>
-            <Head title="Activities" />
+            <Head title={t('navigation.activities')} />
 
             <div className="grid w-full items-start gap-4 p-4 md:p-6 lg:grid-cols-[minmax(0,1fr)_20rem]">
                 {/* Filters: on top on mobile, a sticky panel on the right from lg. */}
                 <aside
-                    aria-label="Activity filters"
+                    aria-label={t('activities.filters')}
                     className="bg-card flex flex-col gap-3 rounded-xl border p-4 lg:sticky lg:top-20 lg:order-2"
                 >
                     <div className="flex items-center justify-between">
-                        <h2 className="text-sm font-semibold">Filters</h2>
+                        <h2 className="text-sm font-semibold">
+                            {t('table.filters')}
+                        </h2>
                         {isFiltered && (
                             <Button
                                 variant="ghost"
@@ -104,7 +108,7 @@ export default function Activities({
                                     )
                                 }
                             >
-                                Clear
+                                {t('common.clear')}
                             </Button>
                         )}
                     </div>
@@ -112,7 +116,7 @@ export default function Activities({
                     <div className="relative">
                         <Icon
                             iconNode={Search01Icon}
-                            className="text-muted-foreground pointer-events-none absolute top-1/2 left-3 size-4 -translate-y-1/2"
+                            className="text-muted-foreground pointer-events-none absolute start-3 top-1/2 size-4 -translate-y-1/2"
                         />
                         <Input
                             type="search"
@@ -122,11 +126,11 @@ export default function Activities({
                             }
                             placeholder={
                                 canViewAll
-                                    ? 'Search user, record or description'
-                                    : 'Search your activity'
+                                    ? t('activities.search_all')
+                                    : t('activities.search_own')
                             }
-                            aria-label="Search activities"
-                            className="pl-9"
+                            aria-label={t('activities.search')}
+                            className="ps-9"
                         />
                     </div>
 
@@ -140,15 +144,17 @@ export default function Activities({
                     >
                         <SelectTrigger
                             className="w-full"
-                            aria-label="Filter by action"
+                            aria-label={t('activities.filter_action')}
                         >
                             <SelectValue />
                         </SelectTrigger>
                         <SelectContent>
-                            <SelectItem value={ALL}>All actions</SelectItem>
+                            <SelectItem value={ALL}>
+                                {t('activities.all_actions')}
+                            </SelectItem>
                             {actions.map((action) => (
                                 <SelectItem key={action} value={action}>
-                                    {actionPresentation(action).label}
+                                    {actionPresentation(action, t).label}
                                 </SelectItem>
                             ))}
                         </SelectContent>
@@ -167,12 +173,14 @@ export default function Activities({
                         >
                             <SelectTrigger
                                 className="w-full"
-                                aria-label="Filter by user"
+                                aria-label={t('activities.filter_user')}
                             >
                                 <SelectValue />
                             </SelectTrigger>
                             <SelectContent>
-                                <SelectItem value={ALL}>All users</SelectItem>
+                                <SelectItem value={ALL}>
+                                    {t('activities.all_users')}
+                                </SelectItem>
                                 {users.map((user) => (
                                     <SelectItem
                                         key={user.id}
@@ -195,7 +203,7 @@ export default function Activities({
                                     immediate: true,
                                 })
                             }
-                            aria-label="From date"
+                            aria-label={t('activities.from_date')}
                         />
                         <Input
                             type="date"
@@ -206,7 +214,7 @@ export default function Activities({
                                     immediate: true,
                                 })
                             }
-                            aria-label="To date"
+                            aria-label={t('activities.to_date')}
                         />
                     </div>
 
@@ -215,7 +223,7 @@ export default function Activities({
                             {/* Plain download link: exports exactly the filters applied above. */}
                             <a href={exportUrl} download>
                                 <Icon iconNode={Download04Icon} />
-                                Export CSV
+                                {t('activities.export_csv')}
                             </a>
                         </Button>
                     )}
@@ -232,16 +240,15 @@ export default function Activities({
                             </span>
                             {isFiltered ? (
                                 <p className="font-medium">
-                                    No activities match these filters.
+                                    {t('activities.empty_filtered')}
                                 </p>
                             ) : (
                                 <div className="space-y-1">
                                     <p className="font-medium">
-                                        No activities yet
+                                        {t('activities.empty_title')}
                                     </p>
                                     <p className="text-muted-foreground text-sm">
-                                        Activity performed in the application
-                                        will appear here.
+                                        {t('activities.empty_description')}
                                     </p>
                                 </div>
                             )}
@@ -256,13 +263,12 @@ export default function Activities({
                             next={({ hasNext }) =>
                                 hasNext ? null : (
                                     <p className="text-muted-foreground/70 pt-2 text-center text-xs">
-                                        You've reached the end of the activity
-                                        history.
+                                        {t('activities.end')}
                                     </p>
                                 )
                             }
                         >
-                            <ol aria-label="Activity timeline">
+                            <ol aria-label={t('activities.timeline')}>
                                 {activities.data.map((activity, index) => (
                                     <ActivityItem
                                         key={activity.id}
@@ -283,8 +289,10 @@ export default function Activities({
 }
 
 function TimelineSkeleton() {
+    const { t } = useTranslation();
+
     return (
-        <div className="space-y-6 pt-2" aria-label="Loading more activities">
+        <div className="space-y-6 pt-2" aria-label={t('activities.loading')}>
             {[0, 1, 2].map((item) => (
                 <div key={item} className="flex gap-4">
                     <Skeleton className="size-8 shrink-0 rounded-full" />
@@ -299,5 +307,7 @@ function TimelineSkeleton() {
 }
 
 Activities.layout = () => ({
-    breadcrumbs: [{ title: 'Activities', href: ActivityController.index() }],
+    breadcrumbs: [
+        { title: 'navigation.activities', href: ActivityController.index() },
+    ],
 });

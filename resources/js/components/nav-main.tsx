@@ -12,11 +12,12 @@ import type { NavItem } from '@/types';
 
 export function NavMain({
     items,
-    label = 'Workspace',
+    label,
     onNavigate,
 }: {
     items: NavItem[];
-    label?: string;
+    /** Translated group label. */
+    label: string;
     onNavigate?: () => void;
 }) {
     const { isCurrentUrl, isCurrentOrParentUrl } = useCurrentUrl();

@@ -15,7 +15,7 @@ class UserSearchProvider implements SearchProvider
 
     public function label(): string
     {
-        return 'Users';
+        return __('search.group.users');
     }
 
     public function permission(): string

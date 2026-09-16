@@ -1,5 +1,6 @@
 import { Key01Icon } from '@hugeicons/core-free-icons';
 import { router } from '@inertiajs/react';
+import { useTranslation } from 'react-i18next';
 import { destroy } from '@/actions/Laravel/Passkeys/Http/Controllers/PasskeyRegistrationController';
 import PasskeyItem from '@/components/passkey-item';
 import PasskeyRegistration from '@/components/passkey-register';
@@ -13,6 +14,8 @@ export type Props = {
 };
 
 const EmptyState = () => {
+    const { t } = useTranslation();
+
     return (
         <div className="border-border/70 flex flex-col items-center justify-center gap-2 rounded-lg border border-dashed px-6 py-10 text-center">
             <div className="bg-muted mb-2 flex size-12 items-center justify-center rounded-2xl">
@@ -21,9 +24,11 @@ const EmptyState = () => {
                     className="text-muted-foreground size-6"
                 />
             </div>
-            <p className="text-base font-semibold">No passkeys yet</p>
+            <p className="text-base font-semibold">
+                {t('settings.passkeys.empty_title')}
+            </p>
             <p className="text-muted-foreground text-sm">
-                Add a passkey to sign in without a password.
+                {t('settings.passkeys.empty_description')}
             </p>
         </div>
     );
@@ -31,6 +36,7 @@ const EmptyState = () => {
 
 export default function ManagePasskeys(props: Props) {
     const passkeys = props.passkeys ?? [];
+    const { t } = useTranslation();
 
     const handleDelete = (id: number, onError: () => void) => {
         router.delete(destroy.url(id), {
@@ -49,8 +55,8 @@ export default function ManagePasskeys(props: Props) {
 
     return (
         <SettingsCard
-            title="Passkeys"
-            description="Manage your passkeys for passwordless sign-in."
+            title={t('settings.passkeys.title')}
+            description={t('settings.passkeys.description')}
         >
             <div className="space-y-6">
                 {passkeys.length > 0 ? (

@@ -22,6 +22,7 @@ test('only the required fields are needed', function () {
         'actor' => null,
         'subject' => null,
         'metadata' => [],
+        'translation' => null,
     ]);
 });
 
@@ -85,3 +86,12 @@ test('relative and http(s) action urls are accepted', function (string $url) {
     'https://example.com/orders/123',
     'http://localhost:8000/orders/123?tab=items',
 ]);
+
+test('translation parameters must be named scalars', function () {
+    new NotificationData(
+        event: 'order.created',
+        titleKey: 'notifications.test.title',
+        messageKey: 'notifications.test.message',
+        parameters: ['items' => ['a', 'b']],
+    );
+})->throws(InvalidArgumentException::class);

@@ -3,8 +3,10 @@
 namespace App\Models;
 
 // use Illuminate\Contracts\Auth\MustVerifyEmail;
+use App\Localization\Locales;
 use App\Models\Concerns\Auditable;
 use Database\Factories\UserFactory;
+use Illuminate\Contracts\Translation\HasLocalePreference;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Attributes\Hidden;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
@@ -22,6 +24,7 @@ use Spatie\Permission\Traits\HasRoles;
  * @property string $name
  * @property string $email
  * @property string|null $avatar_path
+ * @property string $locale
  * @property Carbon|null $email_verified_at
  * @property string $password
  * @property string|null $two_factor_secret
@@ -34,7 +37,7 @@ use Spatie\Permission\Traits\HasRoles;
  */
 #[Fillable(['name', 'email', 'password'])]
 #[Hidden(['password', 'two_factor_secret', 'two_factor_recovery_codes', 'remember_token', 'avatar_path', 'roles', 'permissions'])]
-class User extends Authenticatable implements PasskeyUser
+class User extends Authenticatable implements HasLocalePreference, PasskeyUser
 {
     /** @use HasFactory<UserFactory> */
     use Auditable, HasFactory, HasRoles, Notifiable, PasskeyAuthenticatable, TwoFactorAuthenticatable;
@@ -45,6 +48,24 @@ class User extends Authenticatable implements PasskeyUser
     public function activityLabel(): string
     {
         return $this->name;
+    }
+
+    /**
+     * The interface language preference is not audited (UI noise).
+     *
+     * @return list<string>
+     */
+    public function auditExclude(): array
+    {
+        return ['locale'];
+    }
+
+    /**
+     * Notifications and mail to this user are rendered in their language.
+     */
+    public function preferredLocale(): string
+    {
+        return Locales::resolve($this->locale);
     }
 
     /**

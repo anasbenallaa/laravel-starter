@@ -52,7 +52,7 @@ class StoreUserRequest extends FormRequest
                     ->unmanageableRoles($this->user(), (array) $this->input('roles', []));
 
                 if ($unmanageable->isNotEmpty()) {
-                    $validator->errors()->add('roles', __('You cannot assign roles with permissions you do not have: :roles.', [
+                    $validator->errors()->add('roles', __('errors.access.assign_roles_not_owned', [
                         'roles' => $unmanageable->implode(', '),
                     ]));
                 }

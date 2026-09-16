@@ -13,21 +13,34 @@ use Illuminate\Support\Str;
 final class ActivityCsv
 {
     /**
+     * Column header translation keys (activities.csv.*).
+     *
      * @var list<string>
      */
     public const array HEADERS = [
-        'Date',
-        'Actor',
-        'Actor email',
-        'Action',
-        'Description',
-        'Subject type',
-        'Subject ID',
-        'Subject',
-        'Changes',
-        'Metadata',
-        'IP address',
+        'date',
+        'actor',
+        'actor_email',
+        'action',
+        'description',
+        'subject_type',
+        'subject_id',
+        'subject',
+        'changes',
+        'metadata',
+        'ip_address',
     ];
+
+    /**
+     * Column headers in the current language. Values stay as stored (action
+     * identifiers, descriptions, field names), so exports remain parseable.
+     *
+     * @return list<string>
+     */
+    public static function headers(): array
+    {
+        return array_map(fn (string $column) => (string) __("activities.csv.{$column}"), self::HEADERS);
+    }
 
     /**
      * @return list<string>
@@ -36,7 +49,7 @@ final class ActivityCsv
     {
         return array_map(self::safe(...), [
             $activity->created_at->toIso8601String(),
-            $activity->user->name ?? ($activity->user_id !== null ? 'Deleted user' : 'System'),
+            $activity->user->name ?? (string) __($activity->user_id !== null ? 'activities.actor.deleted_user' : 'activities.actor.system'),
             $activity->user->email ?? '',
             $activity->action,
             (string) $activity->description,

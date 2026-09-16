@@ -39,6 +39,7 @@ Activate **before writing code** when you:
 - Names are `resource.action`, lowercase snake_case, exactly one dot (`App\Authorization\PermissionRegistry::PATTERN`).
 - Use CRUD actions plus specific verbs (`approve`, `export`, `connect`). Don't reuse another resource's permission.
 - Never create permissions in migrations, seeders or the UI. Then run `php artisan permissions:sync`.
+- Add a translated label for each permission (`permissions.label.orders.approve`) and its resource (`permissions.resource.orders`) to every `lang/*.json` file. The identifier itself is never translated; `TranslationFilesTest` fails when a label is missing.
 
 ## Step 2: enforce on the server
 
@@ -114,7 +115,8 @@ php artisan test --compact
 
 ## Checklist
 
-- [ ] Permissions added to `config/permissions.php` and synced.
+- [ ] Permissions added to `config/permissions.php` and synced, with `permissions.label.*` / `permissions.resource.*` keys in every `lang/*.json`.
+- [ ] Server messages (flash, validation, `ValidationException`) use translation keys (`__('errors.orders.…')`).
 - [ ] Every route has `can:` middleware, or is controller-authorized and on the allowlist.
 - [ ] Form Requests authorize, and policies are used for record-level rules.
 - [ ] No role-name checks in feature code.

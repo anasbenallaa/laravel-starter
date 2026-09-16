@@ -1,5 +1,6 @@
 import { Delete02Icon, Key01Icon } from '@hugeicons/core-free-icons';
 import { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { Button } from '@/components/ui/button';
 import {
     Dialog,
@@ -20,6 +21,7 @@ type Props = {
 
 export default function PasskeyItem({ passkey, onDelete }: Props) {
     const [isDeleting, setIsDeleting] = useState(false);
+    const { t } = useTranslation();
 
     const handleDelete = () => {
         setIsDeleting(true);
@@ -47,13 +49,17 @@ export default function PasskeyItem({ passkey, onDelete }: Props) {
                         )}
                     </div>
                     <p className="text-muted-foreground text-sm">
-                        Added {passkey.created_at_diff}
+                        {t('settings.passkeys.added', {
+                            time: passkey.created_at_diff,
+                        })}
                         {passkey.last_used_at_diff && (
                             <>
                                 <span className="text-muted-foreground/50 mx-1">
                                     /
                                 </span>
-                                Last used {passkey.last_used_at_diff}
+                                {t('settings.passkeys.last_used', {
+                                    time: passkey.last_used_at_diff,
+                                })}
                             </>
                         )}
                     </p>
@@ -68,26 +74,30 @@ export default function PasskeyItem({ passkey, onDelete }: Props) {
                         className="text-destructive hover:bg-destructive/10 hover:text-destructive"
                     >
                         <Icon iconNode={Delete02Icon} className="h-4 w-4" />
-                        <span className="sr-only">Remove</span>
+                        <span className="sr-only">{t('common.remove')}</span>
                     </Button>
                 </DialogTrigger>
                 <DialogContent>
-                    <DialogTitle>Remove passkey</DialogTitle>
+                    <DialogTitle>{t('settings.passkeys.remove')}</DialogTitle>
                     <DialogDescription>
-                        Are you sure you want to remove the "{passkey.name}"
-                        passkey? You will no longer be able to use it to sign
-                        in.
+                        {t('settings.passkeys.remove_confirm', {
+                            name: passkey.name,
+                        })}
                     </DialogDescription>
                     <DialogFooter className="gap-2">
                         <DialogClose asChild>
-                            <Button variant="secondary">Cancel</Button>
+                            <Button variant="secondary">
+                                {t('common.cancel')}
+                            </Button>
                         </DialogClose>
                         <Button
                             variant="destructive"
                             onClick={handleDelete}
                             disabled={isDeleting}
                         >
-                            {isDeleting ? 'Removing...' : 'Remove passkey'}
+                            {isDeleting
+                                ? t('settings.passkeys.removing')
+                                : t('settings.passkeys.remove')}
                         </Button>
                     </DialogFooter>
                 </DialogContent>

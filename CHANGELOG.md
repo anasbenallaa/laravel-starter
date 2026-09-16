@@ -13,6 +13,12 @@ see how the codebase evolved. See `docs/architecture.md` for the current map.
 
 ### Added
 
+- **Multilingual app (English, French, Arabic)** (`docs/localization.md`): `lang/{en,fr,ar}.json` as the single translation source for Laravel and React (i18next, lazily loaded per language), `config/locales.php`, `SetLocale` middleware (user → session → default), `users.locale`, `POST /locale` (validated, own account only, same-origin redirect), shared `localization` props, `LanguageSwitcher` (header, auth pages) and a **Language** card in profile settings. Every page, table, form, dialog, toast, validation/flash message, email, search result, CSV header, aria-label and page title is translated, with pluralization (including Arabic's six forms) and Intl date/number formatting (`useFormatters`).
+- **Right-to-left layout for Arabic:** `<html dir>`, Radix `DirectionProvider`, sidebar and mobile sheet on the right, logical Tailwind classes across components and shadcn primitives, flipped directional icons, `<Ltr>` for emails/IPs/identifiers, direction-aware toasts and emails. Direction logic reads `direction`, never the locale code.
+- **Render-time translation of stored content:** notifications accept `titleKey`/`messageKey`/`actionLabelKey` + `parameters` (demo samples use them); the activity timeline builds translated sentences from action, subject and metadata; permissions show translated labels (`permissions.label.*`) while identifiers stay technical.
+- **`JsonTranslator`:** JSON-only translations that also serve grouped lookups (`validation.attributes`) and fall back to English; password reset and verification emails use translation keys and are sent in the recipient's language.
+- **Guard tests** `TranslationFilesTest` (keys, plurals, placeholders, permission labels, keys used in code) and `LocaleTest`; `localization` AI skill.
+
 - **Users:** **Send password reset link** on Edit user (new `users.reset_password` permission), reusing Laravel's password broker and reset email; throttled and logged as `password_reset_sent`.
 - **Activity log export:** `GET /activities/export`, protected by the new `activities.export` permission, streams the timeline's current filtered, scoped rows as CSV (`ActivityCsv`, formula-safe) and records an `exported` activity; the page gains an **Export CSV** button.
 - **Activity log** (`docs/activity-log.md`): single append-only `activities` table, `Auditable` trait + generic `ActivityObserver`, `ActivityLoggerInterface`, login/logout listener, role/permission/password change logging, read-only `/activities` timeline with infinite scroll (cursor pagination, 20 per page), filters and `activities.view.all`; "View activities" in the Users menu.
@@ -28,6 +34,9 @@ see how the codebase evolved. See `docs/architecture.md` for the current map.
 - **UI guidelines** (`docs/ui-guidelines.md`), architecture map (`docs/architecture.md`), and AI skills `project-conventions`, `ui-page-and-table`, `feature-permissions`.
 
 ### Changed
+
+- **Shared components take translated text:** `DataTable` `noun` replaced by `countLabel`, column `align` is `'start' | 'end'`; `ConfirmDialog`/`UnsavedChangesBar` labels default to translations; breadcrumb and auth layout titles are translation keys (`literal: true` for data); `permissionLabel`/`resourceLabel`/`actionPresentation` take `t`.
+- **Backend messages** (flash toasts, access/role errors, validation messages, CSV headers, search groups) use semantic keys (`flash.*`, `errors.*`) instead of English strings.
 
 - **Edit user** no longer sets passwords; the password fields were replaced by the reset-link action (create still sets an initial password).
 - **Activities page:** full width, no heading; timeline scrolls on the left, search/filters/export in a sticky panel on the right (on top on mobile).

@@ -26,6 +26,16 @@ export type AppNotificationData = {
         id: string | number | null;
     } | null;
     metadata: Record<string, unknown>;
+    /**
+     * Translation keys rendered in the reader's language; title, message and
+     * action.label are the stored fallback. Absent on older rows.
+     */
+    translation?: {
+        title: string | null;
+        message: string | null;
+        action_label: string | null;
+        parameters: Record<string, string | number | boolean | null>;
+    } | null;
 };
 
 /** A stored notification as returned by NotificationResource. */

@@ -18,7 +18,7 @@ class RoleSearchProvider implements SearchProvider
 
     public function label(): string
     {
-        return 'Roles';
+        return __('search.group.roles');
     }
 
     public function permission(): string
@@ -40,10 +40,10 @@ class RoleSearchProvider implements SearchProvider
             ->map(fn (Role $role) => new SearchResult(
                 id: "role-{$role->id}",
                 title: (string) $role->name,
-                description: SystemRole::isSystem($role)
-                    ? "System role · all permissions · {$role->users_count} ".str('user')->plural($role->users_count)
-                    : "{$role->permissions_count} ".str('permission')->plural($role->permissions_count)
-                        ." · {$role->users_count} ".str('user')->plural($role->users_count),
+                description: (SystemRole::isSystem($role)
+                    ? __('roles.system_role').' · '.__('search.result.all_permissions')
+                    : trans_choice('search.result.permissions_count', $role->permissions_count))
+                    .' · '.trans_choice('search.result.users_count', $role->users_count),
                 href: $canEdit
                     ? route('admin.roles.edit', $role, absolute: false)
                     : route('admin.roles.index', ['search' => $role->name], absolute: false),

@@ -31,7 +31,7 @@ trait AccessValidationRules
                     ->exists();
 
                 if ($exists) {
-                    $fail(__('Role already exists.'));
+                    $fail(__('errors.roles.already_exists'));
                 }
             },
         ];
@@ -60,9 +60,9 @@ trait AccessValidationRules
     protected function accessValidationMessages(): array
     {
         return [
-            'name.regex' => __('Use letters, numbers, spaces, dots, dashes, ampersands or underscores.'),
-            'permissions.*.exists' => __('One of the selected permissions does not exist.'),
-            'roles.*.exists' => __('One of the selected roles does not exist.'),
+            'name.regex' => __('errors.roles.name_format'),
+            'permissions.*.exists' => __('errors.access.permission_missing'),
+            'roles.*.exists' => __('errors.access.role_missing'),
         ];
     }
 }

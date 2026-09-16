@@ -29,7 +29,7 @@ export function NavUser() {
                     />
                     <Icon
                         iconNode={ArrowDown01Icon}
-                        className="ml-auto size-4 shrink-0 opacity-60 group-data-[collapsible=icon]:hidden"
+                        className="ms-auto size-4 shrink-0 opacity-60 group-data-[collapsible=icon]:hidden"
                     />
                 </SidebarMenuButton>
             </DropdownMenuTrigger>

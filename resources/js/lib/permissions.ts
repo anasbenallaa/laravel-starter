@@ -1,3 +1,5 @@
+import type { TFunction } from 'i18next';
+
 /** Name of the protected super-admin role (App\Authorization\SystemRole::ADMIN). */
 export const ADMIN_ROLE = 'Admin';
 
@@ -9,33 +11,30 @@ function capitalize(value: string): string {
     return value.charAt(0).toUpperCase() + value.slice(1);
 }
 
-/** "purchase_orders" → "Purchase orders" */
-export function resourceLabel(resource: string): string {
-    return capitalize(humanize(resource));
-}
-
-/** "view" → "View" */
-export function actionLabel(action: string): string {
-    return capitalize(humanize(action));
+/**
+ * "purchase_orders" → "Purchase orders". Translated from
+ * `permissions.resource.{resource}` (identifiers themselves never change).
+ */
+export function resourceLabel(resource: string, t: TFunction): string {
+    return t(`permissions.resource.${resource}`, {
+        defaultValue: capitalize(humanize(resource)),
+    });
 }
 
 /**
- * Labels that don't read well from the generic "<action> <resource>" rule.
- * Add an entry here instead of hardcoding a label in a page.
+ * "reports.export" → "Export reports". Translated from
+ * `permissions.label.{name}`; every permission in config/permissions.php must
+ * have one (enforced by TranslationFilesTest). The English fallback reads
+ * "<action> <resource>".
  */
-const permissionLabelOverrides: Record<string, string> = {
-    'users.reset_password': 'Send password reset links',
-};
-
-/** "reports.export" → "Export reports", "activities.view.all" → "View all activities" */
-export function permissionLabel(name: string): string {
-    if (permissionLabelOverrides[name]) {
-        return permissionLabelOverrides[name];
-    }
-
+export function permissionLabel(name: string, t: TFunction): string {
     const [resource = '', ...action] = name.split('.');
 
-    return capitalize(`${humanize(action.join(' '))} ${humanize(resource)}`);
+    return t(`permissions.label.${name}`, {
+        defaultValue: capitalize(
+            `${humanize(action.join(' '))} ${humanize(resource)}`,
+        ),
+    });
 }
 
 /** Whether the current user may grant this permission (null = unrestricted). */

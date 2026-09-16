@@ -1,4 +1,5 @@
 import { Form, Head } from '@inertiajs/react';
+import { useTranslation } from 'react-i18next';
 import InputError from '@/components/input-error';
 import PasswordInput from '@/components/password-input';
 import { Button } from '@/components/ui/button';
@@ -12,29 +13,33 @@ import {
 import PasskeyVerify from '@/components/passkey-verify';
 
 export default function ConfirmPassword() {
+    const { t } = useTranslation();
+
     return (
         <>
-            <Head title="Confirm password" />
+            <Head title={t('auth.confirm_password.head')} />
 
             <PasskeyVerify
                 routes={{
                     options: confirmOptions(),
                     submit: confirmStore(),
                 }}
-                label="Confirm with passkey"
-                loadingLabel="Confirming..."
-                separator="Or confirm with password"
+                label={t('auth.passkey.confirm')}
+                loadingLabel={t('auth.passkey.confirming')}
+                separator={t('auth.passkey.or_confirm_with_password')}
             />
 
             <Form {...store.form()} resetOnSuccess={['password']}>
                 {({ processing, errors }) => (
                     <div className="space-y-6">
                         <div className="grid gap-2">
-                            <Label htmlFor="password">Password</Label>
+                            <Label htmlFor="password">
+                                {t('fields.password')}
+                            </Label>
                             <PasswordInput
                                 id="password"
                                 name="password"
-                                placeholder="Password"
+                                placeholder={t('fields.password')}
                                 autoComplete="current-password"
                                 autoFocus
                             />
@@ -49,7 +54,7 @@ export default function ConfirmPassword() {
                                 data-test="confirm-password-button"
                             >
                                 {processing && <Spinner />}
-                                Confirm password
+                                {t('auth.confirm_password.submit')}
                             </Button>
                         </div>
                     </div>
@@ -60,7 +65,6 @@ export default function ConfirmPassword() {
 }
 
 ConfirmPassword.layout = {
-    title: 'Confirm password',
-    description:
-        'This is a secure area of the application. Please confirm your password before continuing.',
+    title: 'auth.confirm_password.title',
+    description: 'auth.confirm_password.description',
 };

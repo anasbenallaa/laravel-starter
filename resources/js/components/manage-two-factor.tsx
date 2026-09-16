@@ -1,6 +1,7 @@
 import { ShieldCheckIcon } from '@hugeicons/core-free-icons';
 import { Form } from '@inertiajs/react';
 import { useEffect, useRef, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import SettingsCard from '@/components/settings-card';
 import TwoFactorRecoveryCodes from '@/components/two-factor-recovery-codes';
 import TwoFactorSetupModal from '@/components/two-factor-setup-modal';
@@ -18,6 +19,7 @@ export type Props = {
 export default function ManageTwoFactor(props: Props) {
     const requiresConfirmation = props.requiresConfirmation ?? false;
     const twoFactorEnabled = props.twoFactorEnabled ?? false;
+    const { t } = useTranslation();
 
     const {
         qrCodeSvg,
@@ -52,7 +54,7 @@ export default function ManageTwoFactor(props: Props) {
             onClick={() => setShowSetupModal(true)}
         >
             <Icon iconNode={ShieldCheckIcon} />
-            Continue setup
+            {t('settings.two_factor.continue_setup')}
         </Button>
     ) : (
         <Form {...enable.form()} onSuccess={() => setShowSetupModal(true)}>
@@ -63,7 +65,7 @@ export default function ManageTwoFactor(props: Props) {
                     type="submit"
                     disabled={processing}
                 >
-                    Configure 2FA
+                    {t('settings.two_factor.configure')}
                 </Button>
             )}
         </Form>
@@ -72,16 +74,14 @@ export default function ManageTwoFactor(props: Props) {
     return (
         <>
             <SettingsCard
-                title="Two-factor authentication"
-                description="Add a time-based one-time password to protect your account."
+                title={t('settings.two_factor.title')}
+                description={t('settings.two_factor.description')}
                 action={twoFactorEnabled ? undefined : enableAction}
             >
                 {twoFactorEnabled ? (
                     <div className="space-y-4">
                         <p className="text-muted-foreground text-sm">
-                            You will be prompted for a secure, random pin during
-                            login, which you can retrieve from the
-                            TOTP-supported application on your phone.
+                            {t('settings.two_factor.enabled_description')}
                         </p>
 
                         <Form {...disable.form()}>
@@ -91,7 +91,7 @@ export default function ManageTwoFactor(props: Props) {
                                     type="submit"
                                     disabled={processing}
                                 >
-                                    Disable 2FA
+                                    {t('settings.two_factor.disable')}
                                 </Button>
                             )}
                         </Form>
@@ -111,11 +111,10 @@ export default function ManageTwoFactor(props: Props) {
                             />
                         </div>
                         <p className="text-base font-semibold">
-                            Two-factor authentication is off
+                            {t('settings.two_factor.off_title')}
                         </p>
                         <p className="text-muted-foreground text-sm">
-                            Configure an authenticator app to add another
-                            sign-in check.
+                            {t('settings.two_factor.off_description')}
                         </p>
                     </div>
                 )}

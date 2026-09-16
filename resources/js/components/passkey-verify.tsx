@@ -2,6 +2,7 @@ import type { UrlMethodPair } from '@inertiajs/core';
 import { router } from '@inertiajs/react';
 import { Key01Icon } from '@hugeicons/core-free-icons';
 import { usePasskeyVerify } from '@laravel/passkeys/react';
+import { useTranslation } from 'react-i18next';
 import InputError from '@/components/input-error';
 import { Button } from '@/components/ui/button';
 import { Icon } from '@/components/ui/icon';
@@ -24,6 +25,7 @@ export default function PasskeyVerify({
     loadingLabel,
     separator,
 }: Props = {}) {
+    const { t } = useTranslation();
     const { verify, isLoading, error, isSupported } = usePasskeyVerify({
         ...(routes && {
             routes: {
@@ -56,8 +58,8 @@ export default function PasskeyVerify({
                         <Icon iconNode={Key01Icon} className="h-4 w-4" />
                     )}
                     {isLoading
-                        ? (loadingLabel ?? 'Authenticating...')
-                        : (label ?? 'Sign in with a passkey')}
+                        ? (loadingLabel ?? t('auth.passkey.authenticating'))
+                        : (label ?? t('auth.passkey.sign_in'))}
                 </Button>
                 {error && (
                     <InputError message={error} className="text-center" />
@@ -70,7 +72,7 @@ export default function PasskeyVerify({
                 </div>
                 <div className="relative flex justify-center text-xs uppercase">
                     <span className="bg-background text-muted-foreground px-2">
-                        {separator ?? 'Or continue with email'}
+                        {separator ?? t('auth.passkey.or_continue_with_email')}
                     </span>
                 </div>
             </div>

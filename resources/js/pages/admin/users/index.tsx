@@ -8,6 +8,7 @@ import {
 } from '@hugeicons/core-free-icons';
 import { Head, Link, router } from '@inertiajs/react';
 import { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import ActivityController from '@/actions/App/Http/Controllers/ActivityController';
 import UserAccessController from '@/actions/App/Http/Controllers/Admin/UserAccessController';
 import UserController from '@/actions/App/Http/Controllers/Admin/UserController';
@@ -19,6 +20,7 @@ import type {
 } from '@/components/data-table/data-table';
 import { DataTable } from '@/components/data-table/data-table';
 import InputError from '@/components/input-error';
+import { Ltr } from '@/components/ltr';
 import { Button } from '@/components/ui/button';
 import {
     DropdownMenu,
@@ -30,6 +32,7 @@ import {
 import { Icon } from '@/components/ui/icon';
 import { UserInfo } from '@/components/user-info';
 import { useAuthorization } from '@/hooks/use-authorization';
+import { useFormatters } from '@/hooks/use-formatters';
 import type { Paginator, User, UserListItem } from '@/types';
 
 type Props = {
@@ -41,6 +44,8 @@ type Props = {
 
 export default function UsersIndex({ users, roles, filters, sort }: Props) {
     const { can } = useAuthorization();
+    const { t } = useTranslation();
+    const { date } = useFormatters();
     const [deleting, setDeleting] = useState<UserListItem | null>(null);
     const [processing, setProcessing] = useState(false);
     const [deleteError, setDeleteError] = useState<string>();
@@ -62,7 +67,7 @@ export default function UsersIndex({ users, roles, filters, sort }: Props) {
     const columns: DataTableColumn<UserListItem>[] = [
         {
             id: 'user',
-            header: 'User',
+            header: t('users.table.user'),
             sortKey: 'name',
             cell: (user) => (
                 <div className="flex min-w-48 items-center gap-3">
@@ -80,7 +85,7 @@ export default function UsersIndex({ users, roles, filters, sort }: Props) {
         },
         {
             id: 'roles',
-            header: 'Roles',
+            header: t('users.form.roles_title'),
             wrap: true,
             cell: (user) =>
                 user.roles.length > 0 ? (
@@ -91,13 +96,13 @@ export default function UsersIndex({ users, roles, filters, sort }: Props) {
                     </div>
                 ) : (
                     <span className="text-muted-foreground text-xs">
-                        No roles
+                        {t('users.table.no_roles')}
                     </span>
                 ),
         },
         {
             id: 'permissions',
-            header: 'Direct permissions',
+            header: t('users.access.direct_title'),
             visibleFrom: 'lg',
             wrap: true,
             cell: (user) =>
@@ -108,29 +113,28 @@ export default function UsersIndex({ users, roles, filters, sort }: Props) {
                                 key={permission}
                                 className="bg-muted rounded px-1.5 py-0.5 font-mono text-[11px]"
                             >
-                                {permission}
+                                <Ltr>{permission}</Ltr>
                             </code>
                         ))}
                     </div>
                 ) : (
-                    <span className="text-muted-foreground text-xs">None</span>
+                    <span className="text-muted-foreground text-xs">
+                        {t('common.none')}
+                    </span>
                 ),
         },
         {
             id: 'joined',
-            header: 'Joined',
+            header: t('users.table.joined'),
             sortKey: 'created_at',
             visibleFrom: 'md',
             className: 'text-muted-foreground',
-            cell: (user) =>
-                user.created_at
-                    ? new Date(user.created_at).toLocaleDateString()
-                    : '—',
+            cell: (user) => (user.created_at ? date(user.created_at) : '—'),
         },
         {
             id: 'actions',
-            header: <span className="sr-only">Actions</span>,
-            align: 'right',
+            header: <span className="sr-only">{t('common.actions')}</span>,
+            align: 'end',
             className: 'w-0',
             cell: (user) => (
                 <div className="flex items-center justify-end gap-1">
@@ -139,10 +143,12 @@ export default function UsersIndex({ users, roles, filters, sort }: Props) {
                             <Link href={UserAccessController.edit.url(user.id)}>
                                 <Icon iconNode={UserLock01Icon} />
                                 <span className="hidden sm:inline">
-                                    Manage access
+                                    {t('users.actions.manage_access')}
                                 </span>
                                 <span className="sr-only sm:hidden">
-                                    Manage access for {user.name}
+                                    {t('users.actions.manage_access_for', {
+                                        name: user.name,
+                                    })}
                                 </span>
                             </Link>
                         </Button>
@@ -161,12 +167,12 @@ export default function UsersIndex({ users, roles, filters, sort }: Props) {
 
     return (
         <>
-            <Head title="Users" />
+            <Head title={t('navigation.users')} />
 
             <div className="p-4 md:p-6">
                 <DataTable
-                    title="Users"
-                    description="Everyone with an account, and the roles and permissions they have."
+                    title={t('navigation.users')}
+                    description={t('users.index.description')}
                     url={UserController.index.url()}
                     paginator={users}
                     columns={columns}
@@ -174,14 +180,14 @@ export default function UsersIndex({ users, roles, filters, sort }: Props) {
                     sort={sort}
                     search={{
                         value: filters.search,
-                        placeholder: 'Search by name or email',
+                        placeholder: t('users.index.search'),
                     }}
                     filters={[
                         {
                             key: 'role',
-                            label: 'Role',
+                            label: t('users.index.filter_role'),
                             value: filters.role,
-                            allLabel: 'All roles',
+                            allLabel: t('users.index.all_roles'),
                             options: roles.map((role) => ({
                                 value: role,
                                 label: role,
@@ -194,37 +200,35 @@ export default function UsersIndex({ users, roles, filters, sort }: Props) {
                                 <Link href={UserController.create.url()}>
                                     <Icon iconNode={Add01Icon} />
                                     <span className="hidden sm:inline">
-                                        Create user
+                                        {t('users.create.title')}
                                     </span>
                                     <span className="sr-only sm:hidden">
-                                        Create user
+                                        {t('users.create.title')}
                                     </span>
                                 </Link>
                             </Button>
                         )
                     }
-                    noun="users"
-                    emptyMessage="There are no users yet."
-                    emptyFilteredMessage="No users match your search or filters."
+                    countLabel={(count) => t('users.count', { count })}
+                    emptyMessage={t('users.index.empty')}
+                    emptyFilteredMessage={t('users.index.empty_filtered')}
                 />
             </div>
 
             <ConfirmDialog
                 open={deleting !== null}
                 onOpenChange={(open) => !open && setDeleting(null)}
-                title={`Delete ${deleting?.name}?`}
-                confirmLabel="Delete user"
+                title={t('users.delete.title', { name: deleting?.name })}
+                confirmLabel={t('users.actions.delete')}
                 processing={processing}
                 onConfirm={confirmDelete}
             >
                 <p className="text-foreground">
-                    The account for{' '}
-                    <span className="font-medium">{deleting?.email}</span> will
-                    be permanently deleted, along with their roles, direct
-                    permissions and notifications. They will no longer be able
-                    to sign in.
+                    {t('users.delete.description_before')}
+                    <Ltr className="font-medium">{deleting?.email}</Ltr>
+                    {t('users.delete.description_after')}
                 </p>
-                <p>This action cannot be undone.</p>
+                <p>{t('common.cannot_be_undone')}</p>
                 <InputError message={deleteError} />
             </ConfirmDialog>
         </>
@@ -244,6 +248,7 @@ function UserActions({
     onDelete: () => void;
 }) {
     const { can } = useAuthorization();
+    const { t } = useTranslation();
     const canEdit = can('users.update') && user.can_manage;
     const canDelete = can('users.delete') && user.can_manage && !user.is_self;
     const canViewActivities = can('activities.view.all');
@@ -259,7 +264,7 @@ function UserActions({
                     variant="ghost"
                     size="icon"
                     className="size-8"
-                    aria-label={`Actions for ${user.name}`}
+                    aria-label={t('common.actions_for', { name: user.name })}
                 >
                     <Icon iconNode={MoreHorizontalIcon} />
                 </Button>
@@ -269,7 +274,7 @@ function UserActions({
                     <DropdownMenuItem asChild>
                         <Link href={UserController.edit.url(user.id)}>
                             <Icon iconNode={Edit02Icon} />
-                            Edit user
+                            {t('users.actions.edit')}
                         </Link>
                     </DropdownMenuItem>
                 )}
@@ -281,7 +286,7 @@ function UserActions({
                             })}
                         >
                             <Icon iconNode={Activity01Icon} />
-                            View activities
+                            {t('users.actions.view_activities')}
                         </Link>
                     </DropdownMenuItem>
                 )}
@@ -291,7 +296,7 @@ function UserActions({
                 {canDelete && (
                     <DropdownMenuItem variant="destructive" onSelect={onDelete}>
                         <Icon iconNode={Delete02Icon} />
-                        Delete user
+                        {t('users.actions.delete')}
                     </DropdownMenuItem>
                 )}
             </DropdownMenuContent>
@@ -300,5 +305,5 @@ function UserActions({
 }
 
 UsersIndex.layout = () => ({
-    breadcrumbs: [{ title: 'Users', href: UserController.index() }],
+    breadcrumbs: [{ title: 'navigation.users', href: UserController.index() }],
 });

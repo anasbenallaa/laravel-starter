@@ -9,7 +9,31 @@ class, and a free-form **event** string that says what happened.
 Inject `App\Contracts\NotificationServiceInterface` and pass a
 `NotificationData` payload.
 
-Only `event`, `title` and `message` are required. `level` defaults to `info`.
+Only `event`, `title` and `message` (or their translation keys) are required.
+`level` defaults to `info`.
+
+### Translatable notifications (preferred)
+
+Notifications render in the **reader's** current language. Pass translation
+keys and their parameters instead of (or in addition to) fixed text; the keys
+live in `lang/*.json` with `{{param}}` placeholders:
+
+```php
+$notifications->send($customer, new NotificationData(
+    event: 'order.created',
+    titleKey: 'notifications.orders.created.title',     // "New order"
+    messageKey: 'notifications.orders.created.message', // "Order #{{number}} has been created."
+    actionLabelKey: 'notifications.orders.created.action',
+    parameters: ['number' => $order->number],           // named scalars only
+    level: NotificationLevel::Success,
+    actionUrl: route('orders.show', $order, absolute: false),
+));
+```
+
+`title`, `message` and `actionLabel` are then stored in the default language
+as the fallback (older rows and unknown keys show that text). The frontend
+renders `notificationText(notification, t)` from `lib/notifications.ts`.
+Parameter values are data and are shown as given. See `docs/localization.md`.
 
 ### Order created
 
@@ -106,17 +130,18 @@ With Docker, run it inside the app container:
 
 ## Payload reference
 
-| Field                               | Required | Notes                                                                                                              |
-| ----------------------------------- | -------- | ------------------------------------------------------------------------------------------------------------------ |
-| `event`                             | yes      | Lowercase and dot-separated, e.g. `integration.sync.failed`. It is also stored as `notifications.type`.            |
-| `title`, `message`                  | yes      | Must not be blank.                                                                                                 |
-| `level`                             | no       | `info` (default), `success`, `warning` or `error`. It sets the color and the fallback icon.                        |
-| `category`                          | no       | Defaults to the first segment of the event (`order` for `order.created`).                                          |
-| `icon`                              | no       | A name from `notificationIcons` in `resources/js/lib/notifications.ts`. Unknown names fall back to the level icon. |
-| `actionUrl`, `actionLabel`          | no       | A relative path (preferred) or an `http(s)` URL. Other schemes are rejected.                                       |
-| `actorType`, `actorId`, `actorName` | no       | Who caused the event.                                                                                              |
-| `subjectType`, `subjectId`          | no       | What the event is about.                                                                                           |
-| `metadata`                          | no       | Extra feature-specific data.                                                                                       |
+| Field                                                    | Required | Notes                                                                                                              |
+| -------------------------------------------------------- | -------- | ------------------------------------------------------------------------------------------------------------------ |
+| `event`                                                  | yes      | Lowercase and dot-separated, e.g. `integration.sync.failed`. It is also stored as `notifications.type`.            |
+| `title`, `message`                                       | yes      | Must not be blank. Filled from `titleKey` / `messageKey` in the default language when omitted.                     |
+| `titleKey`, `messageKey`, `actionLabelKey`, `parameters` | no       | Translation keys rendered in the reader's language, with named scalar `parameters`. Stored under `translation`.    |
+| `level`                                                  | no       | `info` (default), `success`, `warning` or `error`. It sets the color and the fallback icon.                        |
+| `category`                                               | no       | Defaults to the first segment of the event (`order` for `order.created`).                                          |
+| `icon`                                                   | no       | A name from `notificationIcons` in `resources/js/lib/notifications.ts`. Unknown names fall back to the level icon. |
+| `actionUrl`, `actionLabel`                               | no       | A relative path (preferred) or an `http(s)` URL. Other schemes are rejected.                                       |
+| `actorType`, `actorId`, `actorName`                      | no       | Who caused the event.                                                                                              |
+| `subjectType`, `subjectId`                               | no       | What the event is about.                                                                                           |
+| `metadata`                                               | no       | Extra feature-specific data.                                                                                       |
 
 > **Warning:** the whole payload, including `metadata`, is sent to the
 > recipient's browser. Never put secrets, tokens or other users' private data

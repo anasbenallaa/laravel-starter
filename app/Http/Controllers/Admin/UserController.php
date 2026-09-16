@@ -108,7 +108,7 @@ class UserController extends Controller
             $log->userRoles($user, [], (array) $request->validated('roles'));
         });
 
-        Inertia::flash('toast', ['type' => 'success', 'message' => __('User created successfully.')]);
+        Inertia::flash('toast', ['type' => 'success', 'message' => __('flash.user_created')]);
 
         return to_route('admin.users.index');
     }
@@ -139,7 +139,7 @@ class UserController extends Controller
         // Name/email changes are logged by the Auditable observer.
         $user->update($request->safe()->only(['name', 'email']));
 
-        Inertia::flash('toast', ['type' => 'success', 'message' => __('User updated successfully.')]);
+        Inertia::flash('toast', ['type' => 'success', 'message' => __('flash.user_updated')]);
 
         return to_route('admin.users.index');
     }
@@ -164,7 +164,7 @@ class UserController extends Controller
             subject: $user,
         );
 
-        Inertia::flash('toast', ['type' => 'success', 'message' => __('Password reset link sent to :email.', ['email' => $user->email])]);
+        Inertia::flash('toast', ['type' => 'success', 'message' => __('flash.password_reset_link_sent', ['email' => $user->email])]);
 
         return back();
     }
@@ -178,23 +178,23 @@ class UserController extends Controller
 
         if ($user->is($actor)) {
             throw ValidationException::withMessages([
-                'user' => __('You cannot delete your own account here. Use your profile settings instead.'),
+                'user' => __('errors.users.cannot_delete_self'),
             ]);
         }
 
         if (SystemRole::isLastAdmin($user)) {
-            throw ValidationException::withMessages(['user' => __('The last administrator cannot be deleted.')]);
+            throw ValidationException::withMessages(['user' => __('errors.users.last_admin_delete')]);
         }
 
         if (! $this->delegation->canManageUser($actor, $user)) {
             throw ValidationException::withMessages([
-                'user' => __('You cannot delete a user who has permissions you do not have.'),
+                'user' => __('errors.users.delete_more_permissions'),
             ]);
         }
 
         $deleteUser->handle($user);
 
-        Inertia::flash('toast', ['type' => 'success', 'message' => __('User deleted successfully.')]);
+        Inertia::flash('toast', ['type' => 'success', 'message' => __('flash.user_deleted')]);
 
         return to_route('admin.users.index');
     }

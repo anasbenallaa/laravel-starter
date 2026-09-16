@@ -107,3 +107,22 @@ test('the broadcast payload matches the stored payload', function () {
     expect($notification->toBroadcast($user)->data)->toBe($notification->toDatabase($user))
         ->and($notification->broadcastType())->toBe('sync.failed');
 });
+
+test('translatable notifications store their keys and a default-language fallback', function () {
+    // Real keys resolve from lang/en.json; unknown keys fall back to themselves.
+    $data = new NotificationData(
+        event: 'order.created',
+        titleKey: 'notifications.demo.order_created.title',
+        messageKey: 'Placed by {{name, uppercase}}.',
+        parameters: ['number' => 1042, 'name' => 'Alex'],
+    );
+
+    expect($data->title)->toBe('New order received')
+        ->and($data->message)->toBe('Placed by Alex.')
+        ->and($data->toArray()['translation'])->toBe([
+            'title' => 'notifications.demo.order_created.title',
+            'message' => 'Placed by {{name, uppercase}}.',
+            'action_label' => null,
+            'parameters' => ['number' => 1042, 'name' => 'Alex'],
+        ]);
+});

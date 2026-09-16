@@ -1,3 +1,4 @@
+import { useTranslation } from 'react-i18next';
 import { Checkbox } from '@/components/ui/checkbox';
 import { isDelegable, permissionLabel, resourceLabel } from '@/lib/permissions';
 import { cn } from '@/lib/utils';
@@ -25,6 +26,7 @@ export function PermissionGroups({
     readOnly = false,
     idPrefix = 'permission',
 }: Props) {
+    const { t } = useTranslation();
     const selectedSet = new Set(selected);
 
     const toggle = (names: string[], checked: boolean) => {
@@ -44,7 +46,7 @@ export function PermissionGroups({
     if (groups.length === 0) {
         return (
             <p className="text-muted-foreground text-sm">
-                No permissions have been created yet.
+                {t('permissions.empty')}
             </p>
         );
     }
@@ -67,14 +69,19 @@ export function PermissionGroups({
                 return (
                     <fieldset
                         key={group.resource}
-                        aria-label={`${resourceLabel(group.resource)} permissions`}
+                        aria-label={t('permissions.group_label', {
+                            resource: resourceLabel(group.resource, t),
+                        })}
                         className="bg-card rounded-xl border"
                     >
                         <div className="flex items-center justify-between gap-3 border-b px-4 py-3">
                             <div className="flex items-center gap-2 text-sm font-semibold">
-                                {resourceLabel(group.resource)}
+                                {resourceLabel(group.resource, t)}
                                 <span className="bg-muted text-muted-foreground rounded-md px-1.5 py-0.5 text-xs font-medium tabular-nums">
-                                    {checkedCount}/{group.permissions.length}
+                                    <bdi dir="ltr">
+                                        {checkedCount}/
+                                        {group.permissions.length}
+                                    </bdi>
                                 </span>
                             </div>
                             {editable.length > 0 && (
@@ -86,8 +93,8 @@ export function PermissionGroups({
                                     className="hover:bg-accent rounded-md px-2 py-1 text-sm font-medium transition-colors"
                                 >
                                     {allEditableChecked
-                                        ? 'Deselect all'
-                                        : 'Select all'}
+                                        ? t('permissions.deselect_all')
+                                        : t('permissions.select_all')}
                                 </button>
                             )}
                         </div>
@@ -105,7 +112,9 @@ export function PermissionGroups({
                                         htmlFor={id}
                                         title={
                                             !readOnly && disabled
-                                                ? 'You can only grant permissions you have.'
+                                                ? t(
+                                                      'permissions.only_grant_own',
+                                                  )
                                                 : permission.name
                                         }
                                         className={cn(
@@ -131,7 +140,7 @@ export function PermissionGroups({
                                                 )
                                             }
                                         />
-                                        {permissionLabel(permission.name)}
+                                        {permissionLabel(permission.name, t)}
                                     </label>
                                 );
                             })}

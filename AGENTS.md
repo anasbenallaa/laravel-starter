@@ -71,6 +71,13 @@ This project has domain-specific skills available in `**/skills/**`. You MUST ac
 - Models users change `use Auditable` (with `activityLabel()`); pivot, bulk and custom actions are logged with `ActivityLoggerInterface`; never log standard model CRUD twice, and never log secrets.
 - Assert the activity in the feature's tests. `tests/Feature/Activity/AuditableModelsTest.php` must stay green; don't allowlist models to silence it. Activities are read-only: never add routes or code that edit or delete them.
 
+## Localization (required for every string)
+
+- The app is translated into English, French and Arabic (right-to-left). Before adding or changing any user-visible text, activate the `localization` skill and follow `docs/localization.md`.
+- Never hardcode text: use `t('area.key')` in React and `__('area.key')` in PHP, and add the key to every `lang/*.json` file (the only translation source). Frontend placeholders are `{{name}}`, backend ones `:name`; plurals need each language's forms (`users.count_one`, …).
+- Use logical Tailwind classes (`ms-`, `pe-`, `start-`, `text-start`, `border-s`), flip directional icons with `rtl:rotate-180`, wrap emails/IPs/identifiers in `<Ltr>`, format dates and numbers with `useFormatters()`, and base direction logic on `direction === 'rtl'`, never on a locale code. Don't translate user data or identifiers.
+- `tests/Feature/Localization/TranslationFilesTest.php` and `LocaleTest.php` must stay green.
+
 === boost rules ===
 
 # Laravel Boost

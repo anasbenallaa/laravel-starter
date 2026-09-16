@@ -64,14 +64,14 @@ class UpdateUserAccessRequest extends FormRequest
 
                 if ($unmanageable->isNotEmpty()) {
                     $validator->errors()->add('roles', $unmanageable->contains(SystemRole::ADMIN)
-                        ? __('Only an administrator can assign or remove the Admin role.')
-                        : __('You cannot assign or remove roles with permissions you do not have: :roles.', [
+                        ? __('errors.access.admin_role_only')
+                        : __('errors.access.roles_not_owned', [
                             'roles' => $unmanageable->implode(', '),
                         ]));
                 }
 
                 if (! $requestedRoles->contains(SystemRole::ADMIN) && SystemRole::isLastAdmin($target)) {
-                    $validator->errors()->add('roles', __('The last administrator cannot lose the Admin role.'));
+                    $validator->errors()->add('roles', __('errors.access.last_admin_role'));
                 }
 
                 $currentPermissions = $target->getDirectPermissions()->pluck('name');
@@ -82,7 +82,7 @@ class UpdateUserAccessRequest extends FormRequest
                 $undelegable = $delegation->undelegable($actor, $changedPermissions->all());
 
                 if ($undelegable !== []) {
-                    $validator->errors()->add('permissions', __('You cannot grant or revoke permissions you do not have: :permissions.', [
+                    $validator->errors()->add('permissions', __('errors.access.permissions_not_owned', [
                         'permissions' => implode(', ', $undelegable),
                     ]));
                 }

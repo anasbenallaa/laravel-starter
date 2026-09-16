@@ -23,6 +23,8 @@ Load `project-conventions` first: read `docs/architecture.md` and the `[Unreleas
 
 Also load the `feature-permissions` skill: every page and route needs its permissions declared, enforced and tested.
 
+Also load the `localization` skill: every string is a translation key in all `lang/*.json` files (English, French, Arabic) and the page must work right-to-left.
+
 Read `docs/ui-guidelines.md` in full. It is the source of truth for layout,
 tables, forms, dialogs, icons, colors and permissions. The steps below apply
 those rules; don't deviate from them.
@@ -49,7 +51,7 @@ Then read one existing page of the same kind and copy its structure:
     - eager load what you display, and use `withCount()` for counts
 3. **Routes:** use `can:<resource>.<action>` middleware on every route, never role checks. Register new permissions in `config/permissions.php`.
 4. **Form Requests** for store and update: `authorize()` checks the permission, and `rules()` validates.
-5. **Success:** `Inertia::flash('toast', ['type' => 'success', 'message' => __('<Thing> created successfully.')]);`, then redirect.
+5. **Success:** `Inertia::flash('toast', ['type' => 'success', 'message' => __('flash.thing_created')]);`, then redirect. Add `flash.thing_created` (and every other new key) to `lang/en.json`, `lang/fr.json` and `lang/ar.json`.
 6. **Regenerate route helpers:** `php artisan wayfinder:generate --with-form`.
 
 ## Step 2: list page template
@@ -57,6 +59,7 @@ Then read one existing page of the same kind and copy its structure:
 ```tsx
 import { Add01Icon } from '@hugeicons/core-free-icons';
 import { Head, Link } from '@inertiajs/react';
+import { useTranslation } from 'react-i18next';
 import ThingController from '@/actions/App/Http/Controllers/ThingController';
 import type {
     DataTableColumn,
@@ -66,6 +69,7 @@ import { DataTable } from '@/components/data-table/data-table';
 import { Button } from '@/components/ui/button';
 import { Icon } from '@/components/ui/icon';
 import { useAuthorization } from '@/hooks/use-authorization';
+import { useFormatters } from '@/hooks/use-formatters';
 import type { Paginator } from '@/types';
 
 type Thing = {
@@ -89,33 +93,37 @@ export default function ThingsIndex({
     sort,
 }: Props) {
     const { can } = useAuthorization();
+    const { t } = useTranslation();
+    const { date } = useFormatters();
 
     const columns: DataTableColumn<Thing>[] = [
         {
             id: 'name',
-            header: 'Name',
+            header: t('things.table.name'),
             sortKey: 'name',
             className: 'font-medium',
             cell: (thing) => (
                 <span className="min-w-48 inline-block">{thing.name}</span>
             ),
         },
-        { id: 'status', header: 'Status', cell: (thing) => thing.status },
+        {
+            id: 'status',
+            header: t('things.table.status'),
+            // Enum values are identifiers: translate a label, never the value.
+            cell: (thing) => t(`things.status.${thing.status}`),
+        },
         {
             id: 'created',
-            header: 'Created',
+            header: t('things.table.created'),
             sortKey: 'created_at',
             visibleFrom: 'md',
             className: 'text-muted-foreground',
-            cell: (thing) =>
-                thing.created_at
-                    ? new Date(thing.created_at).toLocaleDateString()
-                    : '—',
+            cell: (thing) => (thing.created_at ? date(thing.created_at) : '—'),
         },
         {
             id: 'actions',
-            header: <span className="sr-only">Actions</span>,
-            align: 'right',
+            header: <span className="sr-only">{t('common.actions')}</span>,
+            align: 'end',
             className: 'w-0',
             cell: (thing) =>
                 null /* row actions dropdown, see users/index.tsx */,
@@ -124,29 +132,29 @@ export default function ThingsIndex({
 
     return (
         <>
-            <Head title="Things" />
+            <Head title={t('things.index.title')} />
 
             <div className="p-4 md:p-6">
                 <DataTable
-                    title="Things"
-                    description="One sentence describing this list."
+                    title={t('things.index.title')}
+                    description={t('things.index.description')}
                     url={ThingController.index.url()}
                     paginator={things}
                     columns={columns}
                     rowKey={(thing) => thing.id}
                     search={{
                         value: filters.search,
-                        placeholder: 'Search things',
+                        placeholder: t('things.index.search'),
                     }}
                     filters={[
                         {
                             key: 'status',
-                            label: 'Status',
+                            label: t('things.index.filter_status'),
                             value: filters.status,
-                            allLabel: 'All statuses',
+                            allLabel: t('things.index.all_statuses'),
                             options: statuses.map((status) => ({
                                 value: status,
-                                label: status,
+                                label: t(`things.status.${status}`),
                             })),
                         },
                     ]}
@@ -157,18 +165,18 @@ export default function ThingsIndex({
                                 <Link href={ThingController.create.url()}>
                                     <Icon iconNode={Add01Icon} />
                                     <span className="hidden sm:inline">
-                                        Create thing
+                                        {t('things.create.title')}
                                     </span>
                                     <span className="sr-only sm:hidden">
-                                        Create thing
+                                        {t('things.create.title')}
                                     </span>
                                 </Link>
                             </Button>
                         )
                     }
-                    noun="things"
-                    emptyMessage="There are no things yet."
-                    emptyFilteredMessage="No things match your search or filters."
+                    countLabel={(count) => t('things.count', { count })}
+                    emptyMessage={t('things.index.empty')}
+                    emptyFilteredMessage={t('things.index.empty_filtered')}
                 />
             </div>
         </>
@@ -176,7 +184,10 @@ export default function ThingsIndex({
 }
 
 ThingsIndex.layout = () => ({
-    breadcrumbs: [{ title: 'Things', href: ThingController.index() }],
+    // Translation keys; pass `literal: true` for data such as a record's name.
+    breadcrumbs: [
+        { title: 'things.index.title', href: ThingController.index() },
+    ],
 });
 ```
 
@@ -192,7 +203,7 @@ ThingsIndex.layout = () => ({
     <UnsavedChangesBar
         visible={form.isDirty}
         processing={form.processing}
-        saveLabel="Create thing"
+        saveLabel={t('things.create.title')}
         onReset={() => {
             form.reset();
             form.clearErrors();
@@ -226,6 +237,16 @@ Every create, update, delete or action the page performs must be recorded (see "
 - **Feeds and timelines** (not tables): use Inertia `Inertia::scroll(fn () => $query->cursorPaginate(20))` with `<InfiniteScroll data="…">`. The timeline scrolls in the main column; search and filters go in a sticky right panel (`lg:grid-cols-[minmax(0,1fr)_20rem]`, `aside` with `lg:sticky lg:top-20`, on top on mobile). Filter visits pass `useQueryFilters(url, initial, 300, { reset: ['<prop>'], only: [<other filter-dependent props>] })`.
 - **CSV exports:** reuse the page's query class (like `ActivityFeed`) so the export matches the current filters and scope. Stream with `response()->streamDownload` + `lazyByIdDesc(500)`, neutralize formula characters (`=`, `+`, `-`, `@`), throttle the route, and log an `exported` activity. The button is a plain `<a href download>` built from the applied filters.
 
+## Step 4d: translations and right-to-left (required)
+
+Follow `docs/localization.md` (the `localization` skill):
+
+- **Keys:** every string above is a key; add each one to `lang/en.json`, `lang/fr.json` and `lang/ar.json`. Plurals (`things.count`) need `_one`/`_other` (en), `_one`/`_many`/`_other` (fr) and `_zero`/`_one`/`_two`/`_few`/`_many`/`_other` (ar).
+- **Backend text** (flash toasts, `ValidationException` and `after()` errors, CSV headers, search labels) uses `__('key')` with `:param` placeholders.
+- **RTL:** logical classes only (`ms-`, `pe-`, `start-`, `text-start`, `border-s`, `gap`), `rtl:rotate-180` on forward/back arrows and chevrons, `<Ltr>` around emails, IPs and identifiers, `dir="ltr"` on email inputs.
+- **Formatting:** `useFormatters()` for dates, relative times and numbers.
+- **Activity and permission labels:** `activities.action.<action>` (+ `activities.sentence.<action>`) and `permissions.label.<resource>.<action>` for anything new.
+
 ## Step 5: icons
 
 - Use HugeIcons only: `import { XIcon } from '@hugeicons/core-free-icons'`, rendered as `<Icon iconNode={XIcon} />` from `@/components/ui/icon`.
@@ -236,7 +257,7 @@ Every create, update, delete or action the page performs must be recorded (see "
 
 1. Write Pest feature tests covering the page render (`assertInertia`), permission denial (403), validation, and each mutation.
 2. Run `php artisan wayfinder:generate --with-form`, `npx vp check --fix`, `npx tsc --noEmit`, `vendor/bin/pint --parallel`, `vendor/bin/phpstan analyse --memory-limit=512M`, `npm run build` and `php artisan test --compact`.
-3. Check the page in dark mode and at 390px width, then go through the checklist at the end of `docs/ui-guidelines.md`.
+3. Check the page in dark mode and at 390px width, in English, French and Arabic (RTL), then go through the checklist at the end of `docs/ui-guidelines.md`.
 
 ## Common mistakes
 
@@ -248,4 +269,5 @@ Every create, update, delete or action the page performs must be recorded (see "
 - A "Back" button next to breadcrumbs.
 - Classic Save / Cancel buttons on a form instead of `UnsavedChangesBar`, or the bar never hiding after save on pages that stay open (missing `setDefaults()`).
 - A form or action that changes data without leaving an entry in the activity log (missing `Auditable`, or no `ActivityLoggerInterface` call for pivots, bulk and custom actions).
+- Hardcoded English text, `toLocaleDateString()`, `ml-`/`mr-`/`left-`/`text-left` classes, or arrows that don't flip in Arabic.
 - Finishing without a `CHANGELOG.md` entry (and a `docs/architecture.md` update for new shared pieces).

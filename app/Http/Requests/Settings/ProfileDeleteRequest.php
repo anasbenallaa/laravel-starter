@@ -32,7 +32,7 @@ class ProfileDeleteRequest extends FormRequest
         return [
             function (Validator $validator) {
                 if (SystemRole::isLastAdmin($this->user())) {
-                    $validator->errors()->add('password', __('The last administrator cannot delete their account.'));
+                    $validator->errors()->add('password', __('errors.profile.last_admin_delete'));
                 }
             },
         ];

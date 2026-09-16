@@ -3,6 +3,7 @@ import {
     TickDouble02Icon,
 } from '@hugeicons/core-free-icons';
 import { Link, usePage } from '@inertiajs/react';
+import { useTranslation } from 'react-i18next';
 import { NotificationIcon } from '@/components/notification-icon';
 import { Button } from '@/components/ui/button';
 import {
@@ -13,10 +14,11 @@ import {
     DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import { Icon } from '@/components/ui/icon';
+import { useFormatters } from '@/hooks/use-formatters';
 import {
     formatBadgeCount,
-    formatRelativeTime,
     markAllNotificationsAsRead,
+    notificationText,
     openNotification,
 } from '@/lib/notifications';
 import { cn } from '@/lib/utils';
@@ -28,6 +30,8 @@ import { index as notificationsIndex } from '@/routes/notifications';
  */
 export function NotificationBell() {
     const { notificationSummary } = usePage().props;
+    const { t } = useTranslation();
+    const { relativeTime } = useFormatters();
 
     if (!notificationSummary) {
         return null;
@@ -46,13 +50,15 @@ export function NotificationBell() {
                     data-test="notification-bell"
                     aria-label={
                         unreadCount > 0
-                            ? `Notifications (${unreadCount} unread)`
-                            : 'Notifications'
+                            ? t('notifications.unread_label', {
+                                  count: unreadCount,
+                              })
+                            : t('notifications.title')
                     }
                 >
                     <Icon iconNode={Notification03Icon} className="size-5" />
                     {badge && (
-                        <span className="bg-destructive ring-background absolute -top-0.5 -right-0.5 flex h-4 min-w-4 items-center justify-center rounded-full px-1 text-[10px] leading-none font-semibold text-white tabular-nums ring-2">
+                        <span className="bg-destructive ring-background absolute -end-0.5 -top-0.5 flex h-4 min-w-4 items-center justify-center rounded-full px-1 text-[10px] leading-none font-semibold text-white tabular-nums ring-2">
                             {badge}
                         </span>
                     )}
@@ -68,10 +74,14 @@ export function NotificationBell() {
                 className="w-[calc(100vw-2rem)] p-0 sm:w-96"
             >
                 <div className="flex items-center justify-between px-4 py-3">
-                    <p className="text-sm font-semibold">Notifications</p>
+                    <p className="text-sm font-semibold">
+                        {t('notifications.title')}
+                    </p>
                     {unreadCount > 0 && (
                         <span className="text-muted-foreground text-xs">
-                            {unreadCount} unread
+                            {t('notifications.unread_count', {
+                                count: unreadCount,
+                            })}
                         </span>
                     )}
                 </div>
@@ -85,13 +95,14 @@ export function NotificationBell() {
                             className="text-muted-foreground size-6"
                         />
                         <p className="text-muted-foreground text-sm">
-                            No notifications yet
+                            {t('notifications.empty')}
                         </p>
                     </div>
                 ) : (
                     <div className="max-h-96 overflow-y-auto p-1">
                         {recent.map((notification) => {
                             const unread = notification.read_at === null;
+                            const text = notificationText(notification, t);
 
                             return (
                                 <DropdownMenuItem
@@ -117,13 +128,13 @@ export function NotificationBell() {
                                                     : 'font-medium',
                                             )}
                                         >
-                                            {notification.data.title}
+                                            {text.title}
                                         </p>
                                         <p className="text-muted-foreground line-clamp-2 text-xs">
-                                            {notification.data.message}
+                                            {text.message}
                                         </p>
                                         <p className="text-muted-foreground/80 text-[11px]">
-                                            {formatRelativeTime(
+                                            {relativeTime(
                                                 notification.created_at,
                                             )}
                                         </p>
@@ -131,7 +142,9 @@ export function NotificationBell() {
                                     {unread && (
                                         <span
                                             className="bg-primary mt-1.5 size-2 shrink-0 rounded-full"
-                                            aria-label="Unread"
+                                            aria-label={t(
+                                                'notifications.unread',
+                                            )}
                                         />
                                     )}
                                 </DropdownMenuItem>
@@ -152,11 +165,11 @@ export function NotificationBell() {
                         className="text-xs"
                     >
                         <Icon iconNode={TickDouble02Icon} />
-                        Mark all as read
+                        {t('notifications.mark_all_read')}
                     </DropdownMenuItem>
                     <DropdownMenuItem asChild className="text-xs">
                         <Link href={notificationsIndex()} prefetch>
-                            View all notifications
+                            {t('notifications.view_all')}
                         </Link>
                     </DropdownMenuItem>
                 </div>

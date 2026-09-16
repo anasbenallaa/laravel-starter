@@ -105,7 +105,9 @@ class SendDemoNotificationsCommand extends Command
 
     /**
      * Newest first. Covers every level, icons with and without a match, action
-     * links, actors, subjects and a long message.
+     * links, actors, subjects and a long message. Every sample is translatable
+     * (keys in lang/*.json under notifications.demo.*), so it renders in the
+     * reader's language.
      *
      * @return list<array{data: NotificationData, minutes_ago: int}>
      */
@@ -115,118 +117,82 @@ class SendDemoNotificationsCommand extends Command
         $notificationsPage = route('notifications.index', absolute: false);
         $profile = route('profile.edit', absolute: false);
 
+        $sample = fn (string $name, int $minutesAgo, array $data): array => [
+            'minutes_ago' => $minutesAgo,
+            'data' => new NotificationData(...[
+                'titleKey' => "notifications.demo.{$name}.title",
+                'messageKey' => "notifications.demo.{$name}.message",
+                ...$data,
+            ]),
+        ];
+
         return [
-            [
-                'minutes_ago' => 0,
-                'data' => new NotificationData(
-                    event: 'order.created',
-                    title: 'New order received',
-                    message: 'Order #1042 was placed and is waiting for review.',
-                    level: NotificationLevel::Success,
-                    icon: 'package',
-                    actionUrl: $dashboard,
-                    actionLabel: 'View order',
-                    actorType: 'user',
-                    actorName: 'Alex Kim',
-                    subjectType: 'order',
-                    subjectId: 1042,
-                ),
-            ],
-            [
-                'minutes_ago' => 2,
-                'data' => new NotificationData(
-                    event: 'integration.sync.failed',
-                    title: 'Synchronization failed',
-                    message: 'We could not synchronize your data. The remote server did not respond in time.',
-                    level: NotificationLevel::Error,
-                    icon: 'sync',
-                    actionUrl: $notificationsPage,
-                    actionLabel: 'See details',
-                ),
-            ],
-            [
-                'minutes_ago' => 25,
-                'data' => new NotificationData(
-                    event: 'system.warning',
-                    title: 'Storage almost full',
-                    message: 'You have used 92% of your storage quota. Remove old exports to free up space.',
-                    level: NotificationLevel::Warning,
-                ),
-            ],
-            [
-                'minutes_ago' => 90,
-                'data' => new NotificationData(
-                    event: 'user.invited',
-                    title: 'Teammate invited',
-                    message: 'Sam Patel was invited to your workspace.',
-                    icon: 'user-add',
-                    actorType: 'user',
-                    actorName: 'Sam Patel',
-                ),
-            ],
-            [
-                'minutes_ago' => 60 * 5,
-                'data' => new NotificationData(
-                    event: 'export.completed',
-                    title: 'Export ready',
-                    message: 'Your CSV export of 1,284 records is ready to download.',
-                    level: NotificationLevel::Success,
-                    icon: 'download',
-                    actionUrl: $dashboard,
-                    actionLabel: 'Download',
-                ),
-            ],
-            [
-                'minutes_ago' => 60 * 26,
-                'data' => new NotificationData(
-                    event: 'integration.disconnected',
-                    title: 'Integration disconnected',
-                    message: 'The connection to your accounting software expired. Reconnect it to keep invoices in sync.',
-                    level: NotificationLevel::Warning,
-                    icon: 'unlink',
-                    actionUrl: $dashboard,
-                    actionLabel: 'Reconnect',
-                ),
-            ],
-            [
-                'minutes_ago' => 60 * 30,
-                'data' => new NotificationData(
-                    event: 'payment.completed',
-                    title: 'Payment received',
-                    message: 'Invoice INV-2026-0098 was paid in full.',
-                    level: NotificationLevel::Success,
-                    icon: 'credit-card',
-                ),
-            ],
-            [
-                'minutes_ago' => 60 * 24 * 3,
-                'data' => new NotificationData(
-                    event: 'account.security',
-                    title: 'New sign-in to your account',
-                    message: 'Your account was accessed from a new device. If this was not you, change your password right away.',
-                    level: NotificationLevel::Error,
-                    icon: 'shield',
-                    actionUrl: $profile,
-                    actionLabel: 'Review security',
-                ),
-            ],
-            [
-                'minutes_ago' => 60 * 24 * 6,
-                'data' => new NotificationData(
-                    event: 'system.maintenance',
-                    title: 'Scheduled maintenance',
-                    message: 'The application will be briefly unavailable on Sunday between 02:00 and 03:00 UTC while we upgrade our infrastructure. Any work in progress will be saved automatically, and background jobs will resume once maintenance is complete.',
-                    icon: 'settings',
-                ),
-            ],
-            [
-                'minutes_ago' => 60 * 24 * 12,
-                'data' => new NotificationData(
-                    event: 'system.info',
-                    title: 'Welcome aboard',
-                    message: 'Notifications about activity in your account will appear here.',
-                ),
-            ],
+            $sample('order_created', 0, [
+                'event' => 'order.created',
+                'level' => NotificationLevel::Success,
+                'icon' => 'package',
+                'actionUrl' => $dashboard,
+                'actionLabelKey' => 'notifications.demo.order_created.action',
+                'actorType' => 'user',
+                'actorName' => 'Alex Kim',
+                'subjectType' => 'order',
+                'subjectId' => 1042,
+                'parameters' => ['number' => 1042],
+            ]),
+            $sample('sync_failed', 2, [
+                'event' => 'integration.sync.failed',
+                'level' => NotificationLevel::Error,
+                'icon' => 'sync',
+                'actionUrl' => $notificationsPage,
+                'actionLabelKey' => 'notifications.demo.sync_failed.action',
+            ]),
+            $sample('storage_warning', 25, [
+                'event' => 'system.warning',
+                'level' => NotificationLevel::Warning,
+                'parameters' => ['percent' => 92],
+            ]),
+            $sample('user_invited', 90, [
+                'event' => 'user.invited',
+                'icon' => 'user-add',
+                'actorType' => 'user',
+                'actorName' => 'Sam Patel',
+                'parameters' => ['name' => 'Sam Patel'],
+            ]),
+            $sample('export_completed', 60 * 5, [
+                'event' => 'export.completed',
+                'level' => NotificationLevel::Success,
+                'icon' => 'download',
+                'actionUrl' => $dashboard,
+                'actionLabelKey' => 'notifications.demo.export_completed.action',
+                'parameters' => ['count' => 1284],
+            ]),
+            $sample('integration_disconnected', 60 * 26, [
+                'event' => 'integration.disconnected',
+                'level' => NotificationLevel::Warning,
+                'icon' => 'unlink',
+                'actionUrl' => $dashboard,
+                'actionLabelKey' => 'notifications.demo.integration_disconnected.action',
+            ]),
+            $sample('payment_completed', 60 * 30, [
+                'event' => 'payment.completed',
+                'level' => NotificationLevel::Success,
+                'icon' => 'credit-card',
+                'parameters' => ['invoice' => 'INV-2026-0098'],
+            ]),
+            $sample('new_sign_in', 60 * 24 * 3, [
+                'event' => 'account.security',
+                'level' => NotificationLevel::Error,
+                'icon' => 'shield',
+                'actionUrl' => $profile,
+                'actionLabelKey' => 'notifications.demo.new_sign_in.action',
+            ]),
+            $sample('maintenance', 60 * 24 * 6, [
+                'event' => 'system.maintenance',
+                'icon' => 'settings',
+            ]),
+            $sample('welcome', 60 * 24 * 12, [
+                'event' => 'system.info',
+            ]),
         ];
     }
 }

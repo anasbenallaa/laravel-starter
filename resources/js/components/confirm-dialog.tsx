@@ -1,3 +1,4 @@
+import { useTranslation } from 'react-i18next';
 import { Button } from '@/components/ui/button';
 import {
     Dialog,
@@ -25,10 +26,12 @@ export function ConfirmDialog({
     onOpenChange,
     title,
     children,
-    confirmLabel = 'Delete',
+    confirmLabel,
     processing = false,
     onConfirm,
 }: Props) {
+    const { t } = useTranslation();
+
     return (
         <Dialog open={open} onOpenChange={onOpenChange}>
             <DialogContent>
@@ -41,7 +44,7 @@ export function ConfirmDialog({
                 <DialogFooter className="gap-2">
                     <DialogClose asChild>
                         <Button variant="secondary" disabled={processing}>
-                            Cancel
+                            {t('common.cancel')}
                         </Button>
                     </DialogClose>
                     <Button
@@ -49,7 +52,7 @@ export function ConfirmDialog({
                         disabled={processing}
                         onClick={onConfirm}
                     >
-                        {confirmLabel}
+                        {confirmLabel ?? t('common.delete')}
                     </Button>
                 </DialogFooter>
             </DialogContent>

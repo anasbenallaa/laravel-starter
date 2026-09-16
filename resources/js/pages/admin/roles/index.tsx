@@ -8,7 +8,9 @@ import {
     ViewIcon,
 } from '@hugeicons/core-free-icons';
 import { Head, Link, router } from '@inertiajs/react';
+import type { TFunction } from 'i18next';
 import { useMemo, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import RoleController from '@/actions/App/Http/Controllers/Admin/RoleController';
 import {
     RoleBadge,
@@ -18,6 +20,7 @@ import { ConfirmDialog } from '@/components/confirm-dialog';
 import type { DataTableColumn } from '@/components/data-table/data-table';
 import { DataTable } from '@/components/data-table/data-table';
 import InputError from '@/components/input-error';
+import { Ltr } from '@/components/ltr';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import {
@@ -28,6 +31,7 @@ import {
 } from '@/components/ui/dropdown-menu';
 import { Icon } from '@/components/ui/icon';
 import { useAuthorization } from '@/hooks/use-authorization';
+import { useFormatters } from '@/hooks/use-formatters';
 import { permissionLabel, resourceLabel } from '@/lib/permissions';
 import type {
     Paginator,
@@ -54,10 +58,11 @@ type PermissionRow = {
     action: string;
 };
 
+/** Translation keys of the view tabs. */
 const VIEW_LABELS: Record<View, string> = {
-    roles: 'Roles',
-    matrix: 'Matrix',
-    permissions: 'Permissions',
+    roles: 'roles.view.roles',
+    matrix: 'roles.view.matrix',
+    permissions: 'roles.view.permissions',
 };
 
 /** Same action order as the role form (PermissionRegistry). */
@@ -80,10 +85,6 @@ function byResourceThenAction<Row extends { resource: string; action: string }>(
     );
 }
 
-function plural(count: number, word: string) {
-    return count === 1 ? word : `${word}s`;
-}
-
 function initialView(available: View[]): View {
     const requested =
         typeof window !== 'undefined'
@@ -99,6 +100,7 @@ function matchesPermission(
     row: { name: string; resource: string },
     search: string,
     resource: string | null,
+    t: TFunction,
 ) {
     const needle = search.trim().toLowerCase();
 
@@ -106,25 +108,41 @@ function matchesPermission(
         (!resource || row.resource === resource) &&
         (!needle ||
             row.name.includes(needle) ||
-            permissionLabel(row.name).toLowerCase().includes(needle))
+            permissionLabel(row.name, t).toLowerCase().includes(needle))
     );
 }
 
 /** One-line summary derived from what the role can actually access. */
-function roleSummary(role: RoleListItem): string {
+function roleSummary(role: RoleListItem, t: TFunction, locale: string): string {
     if (role.is_system) {
-        return 'Full access to every permission.';
+        return t('roles.summary.full_access');
     }
 
     const resources = [
         ...new Set(role.permissions.map((name) => name.split('.')[0])),
-    ].map(resourceLabel);
+    ].map((resource) => resourceLabel(resource, t));
 
     if (resources.length === 0) {
-        return 'No permissions assigned yet.';
+        return t('roles.summary.none');
     }
 
-    return `Access to ${resources.slice(0, 3).join(', ')}${resources.length > 3 ? ` and ${resources.length - 3} more` : ''}.`;
+    // "A, B and C" / "A, B, C and 2 more", with the locale's separators.
+    if (resources.length > 3) {
+        return t('roles.summary.access_more', {
+            resources: new Intl.ListFormat(locale, {
+                style: 'short',
+                type: 'unit',
+            }).format(resources.slice(0, 3)),
+            count: resources.length - 3,
+        });
+    }
+
+    return t('roles.summary.access', {
+        resources: new Intl.ListFormat(locale, {
+            style: 'long',
+            type: 'conjunction',
+        }).format(resources),
+    });
 }
 
 export default function RolesPermissions({
@@ -134,6 +152,8 @@ export default function RolesPermissions({
     filters,
 }: Props) {
     const { can } = useAuthorization();
+    const { t, i18n } = useTranslation();
+    const { date, number } = useFormatters();
     const views: View[] = [
         ...(roles ? (['roles', 'matrix'] as View[]) : []),
         ...(permissions ? (['permissions'] as View[]) : []),
@@ -169,26 +189,26 @@ export default function RolesPermissions({
                     })),
                 )
                 .filter((row) =>
-                    matchesPermission(row, permissionSearch, resource),
+                    matchesPermission(row, permissionSearch, resource, t),
                 )
                 .sort(byResourceThenAction),
-        [permissionGroups, permissionSearch, resource],
+        [permissionGroups, permissionSearch, resource, t],
     );
     const permissionRows = useMemo(
         () =>
             (permissions ?? [])
                 .filter((row) =>
-                    matchesPermission(row, permissionSearch, resource),
+                    matchesPermission(row, permissionSearch, resource, t),
                 )
                 .sort(byResourceThenAction),
-        [permissions, permissionSearch, resource],
+        [permissions, permissionSearch, resource, t],
     );
     const resourceOptions = useMemo(
         () =>
             [...new Set(permissionGroups.map((group) => group.resource))]
                 .sort()
-                .map((value) => ({ value, label: resourceLabel(value) })),
-        [permissionGroups],
+                .map((value) => ({ value, label: resourceLabel(value, t) })),
+        [permissionGroups, t],
     );
 
     const confirmDelete = () => {
@@ -206,10 +226,9 @@ export default function RolesPermissions({
     };
 
     const tableProps = {
-        title: 'Roles & permissions',
-        description:
-            'Manage what users can access. Members inherit every permission of their roles; permissions are defined in code by each feature.',
-        tabs: views.map((value) => ({ value, label: VIEW_LABELS[value] })),
+        title: t('navigation.roles_permissions'),
+        description: t('roles.index.description'),
+        tabs: views.map((value) => ({ value, label: t(VIEW_LABELS[value]) })),
         activeTab: view,
         onTabChange: changeView,
         actions:
@@ -217,8 +236,12 @@ export default function RolesPermissions({
                 <Button asChild>
                     <Link href={RoleController.create.url()}>
                         <Icon iconNode={Add01Icon} />
-                        <span className="hidden sm:inline">Create role</span>
-                        <span className="sr-only sm:hidden">Create role</span>
+                        <span className="hidden sm:inline">
+                            {t('roles.create.title')}
+                        </span>
+                        <span className="sr-only sm:hidden">
+                            {t('roles.create.title')}
+                        </span>
                     </Link>
                 </Button>
             ) : undefined,
@@ -227,30 +250,30 @@ export default function RolesPermissions({
     const localPermissionControls = {
         search: {
             value: permissionSearch,
-            placeholder: 'Search permissions',
+            placeholder: t('permissions.search'),
             onChange: setPermissionSearch,
         },
         filters: [
             {
                 key: 'resource',
-                label: 'Resource',
+                label: t('permissions.filter_resource'),
                 value: resource,
-                allLabel: 'All resources',
+                allLabel: t('permissions.all_resources'),
                 options: resourceOptions,
                 onChange: setResource,
             },
         ],
         groupBy: (row: { resource: string }) => row.resource,
-        groupLabel: resourceLabel,
-        noun: 'permissions',
-        emptyMessage: 'There are no permissions yet.',
-        emptyFilteredMessage: 'No permissions match your search or filters.',
+        groupLabel: (group: string) => resourceLabel(group, t),
+        countLabel: (count: number) => t('permissions.count', { count }),
+        emptyMessage: t('permissions.empty'),
+        emptyFilteredMessage: t('permissions.empty_filtered'),
     };
 
     const roleColumns: DataTableColumn<RoleListItem>[] = [
         {
             id: 'role',
-            header: 'Role',
+            header: t('roles.table.role'),
             wrap: true,
             cell: (role) => (
                 <div className="min-w-48 space-y-0.5">
@@ -259,50 +282,46 @@ export default function RolesPermissions({
                         {role.is_system && <SystemRoleBadge />}
                     </div>
                     <p className="text-muted-foreground text-xs">
-                        {roleSummary(role)}
+                        {roleSummary(role, t, i18n.language)}
                     </p>
                 </div>
             ),
         },
         {
             id: 'users',
-            header: 'Users',
-            cell: (role) =>
-                `${role.users_count} ${plural(role.users_count, 'user')}`,
+            header: t('navigation.users'),
+            cell: (role) => t('users.count', { count: role.users_count }),
         },
         {
             id: 'permissions',
-            header: 'Permissions',
+            header: t('roles.view.permissions'),
             cell: (role) =>
                 role.is_system
-                    ? 'All permissions'
-                    : `${role.permissions_count} ${plural(role.permissions_count, 'permission')}`,
+                    ? t('roles.all_permissions')
+                    : t('permissions.count', { count: role.permissions_count }),
         },
         {
             id: 'type',
-            header: 'Type',
+            header: t('roles.table.type'),
             visibleFrom: 'sm',
             cell: (role) =>
                 role.is_system ? (
                     <SystemRoleBadge />
                 ) : (
-                    <Badge variant="secondary">Custom</Badge>
+                    <Badge variant="secondary">{t('roles.custom')}</Badge>
                 ),
         },
         {
             id: 'created',
-            header: 'Created',
+            header: t('roles.table.created'),
             visibleFrom: 'md',
             className: 'text-muted-foreground',
-            cell: (role) =>
-                role.created_at
-                    ? new Date(role.created_at).toLocaleDateString()
-                    : '—',
+            cell: (role) => (role.created_at ? date(role.created_at) : '—'),
         },
         {
             id: 'actions',
-            header: <span className="sr-only">Actions</span>,
-            align: 'right',
+            header: <span className="sr-only">{t('common.actions')}</span>,
+            align: 'end',
             className: 'w-0',
             cell: (role) => (
                 <RoleActions
@@ -319,10 +338,10 @@ export default function RolesPermissions({
     const matrixColumns: DataTableColumn<PermissionRow>[] = [
         {
             id: 'permission',
-            header: 'Permission',
+            header: t('permissions.table.permission'),
             className: 'min-w-44',
             cell: (row) => (
-                <span title={row.name}>{permissionLabel(row.name)}</span>
+                <span title={row.name}>{permissionLabel(row.name, t)}</span>
             ),
         },
         ...(roles?.data ?? []).map<DataTableColumn<PermissionRow>>((role) => ({
@@ -341,7 +360,11 @@ export default function RolesPermissions({
                                 ? 'inline size-4 text-emerald-600 dark:text-emerald-400'
                                 : 'text-muted-foreground/50 inline size-4'
                         }
-                        aria-label={has ? 'Granted' : 'Not granted'}
+                        aria-label={
+                            has
+                                ? t('permissions.granted')
+                                : t('permissions.not_granted')
+                        }
                     />
                 );
             },
@@ -351,22 +374,22 @@ export default function RolesPermissions({
     const permissionColumns: DataTableColumn<PermissionListItem>[] = [
         {
             id: 'permission',
-            header: 'Permission',
-            cell: (permission) => permissionLabel(permission.name),
+            header: t('permissions.table.permission'),
+            cell: (permission) => permissionLabel(permission.name, t),
         },
         {
             id: 'identifier',
-            header: 'Identifier',
+            header: t('permissions.table.identifier'),
             visibleFrom: 'sm',
             cell: (permission) => (
                 <code className="text-muted-foreground font-mono text-xs">
-                    {permission.name}
+                    <Ltr>{permission.name}</Ltr>
                 </code>
             ),
         },
         {
             id: 'roles',
-            header: 'Roles',
+            header: t('roles.view.roles'),
             visibleFrom: 'md',
             wrap: true,
             cell: (permission) =>
@@ -377,21 +400,23 @@ export default function RolesPermissions({
                         ))}
                     </div>
                 ) : (
-                    <span className="text-muted-foreground text-xs">None</span>
+                    <span className="text-muted-foreground text-xs">
+                        {t('common.none')}
+                    </span>
                 ),
         },
         {
             id: 'users',
-            header: 'Direct users',
-            align: 'right',
+            header: t('permissions.table.direct_users'),
+            align: 'end',
             className: 'text-muted-foreground tabular-nums',
-            cell: (permission) => permission.users_count,
+            cell: (permission) => number(permission.users_count),
         },
     ];
 
     return (
         <>
-            <Head title="Roles & permissions" />
+            <Head title={t('navigation.roles_permissions')} />
 
             <div className="p-4 md:p-6">
                 {view === 'roles' && roles && (
@@ -404,11 +429,11 @@ export default function RolesPermissions({
                         rowKey={(role) => role.id}
                         search={{
                             value: filters.search,
-                            placeholder: 'Search roles',
+                            placeholder: t('roles.index.search'),
                         }}
-                        noun="roles"
-                        emptyMessage="There are no roles yet."
-                        emptyFilteredMessage="No roles match your search."
+                        countLabel={(count) => t('roles.count', { count })}
+                        emptyMessage={t('roles.empty')}
+                        emptyFilteredMessage={t('roles.index.empty_filtered')}
                     />
                 )}
 
@@ -438,25 +463,21 @@ export default function RolesPermissions({
             <ConfirmDialog
                 open={deleting !== null}
                 onOpenChange={(open) => !open && setDeleting(null)}
-                title={`Delete role "${deleting?.name}"?`}
-                confirmLabel="Delete role"
+                title={t('roles.delete.title', { name: deleting?.name })}
+                confirmLabel={t('roles.actions.delete')}
                 processing={processing}
                 onConfirm={confirmDelete}
             >
                 {deleting && deleting.users_count > 0 ? (
                     <p className="text-foreground font-medium">
-                        This role is assigned to {deleting.users_count}{' '}
-                        {plural(deleting.users_count, 'user')}. Deleting it will
-                        remove this role from{' '}
-                        {deleting.users_count === 1
-                            ? 'that user'
-                            : 'those users'}{' '}
-                        and they will lose the permissions inherited from it.
+                        {t('roles.delete.assigned', {
+                            count: deleting.users_count,
+                        })}
                     </p>
                 ) : (
-                    <p>This role is not assigned to any users.</p>
+                    <p>{t('roles.delete.unassigned')}</p>
                 )}
-                <p>This action cannot be undone.</p>
+                <p>{t('common.cannot_be_undone')}</p>
                 <InputError message={deleteError} />
             </ConfirmDialog>
         </>
@@ -472,6 +493,7 @@ function RoleActions({
     onDelete: () => void;
 }) {
     const { can } = useAuthorization();
+    const { t } = useTranslation();
     const canEdit = can('roles.update');
     const manageable = role.can_manage && !role.is_system;
     const canDelete = can('roles.delete') && manageable;
@@ -484,11 +506,17 @@ function RoleActions({
                         <Icon iconNode={manageable ? Edit02Icon : ViewIcon} />
                         <span className="hidden sm:inline">
                             {manageable
-                                ? 'Manage permissions'
-                                : 'View permissions'}
+                                ? t('roles.actions.manage_permissions')
+                                : t('roles.actions.view_permissions')}
                         </span>
                         <span className="sr-only sm:hidden">
-                            {manageable ? 'Manage' : 'View'} {role.name}
+                            {manageable
+                                ? t('roles.actions.manage_role', {
+                                      name: role.name,
+                                  })
+                                : t('roles.actions.view_role', {
+                                      name: role.name,
+                                  })}
                         </span>
                     </Link>
                 </Button>
@@ -500,7 +528,9 @@ function RoleActions({
                             variant="ghost"
                             size="icon"
                             className="size-8"
-                            aria-label={`Actions for ${role.name}`}
+                            aria-label={t('common.actions_for', {
+                                name: role.name,
+                            })}
                         >
                             <Icon iconNode={MoreHorizontalIcon} />
                         </Button>
@@ -511,7 +541,7 @@ function RoleActions({
                             onSelect={onDelete}
                         >
                             <Icon iconNode={Delete02Icon} />
-                            Delete role
+                            {t('roles.actions.delete')}
                         </DropdownMenuItem>
                     </DropdownMenuContent>
                 </DropdownMenu>
@@ -522,6 +552,6 @@ function RoleActions({
 
 RolesPermissions.layout = () => ({
     breadcrumbs: [
-        { title: 'Roles & permissions', href: RoleController.index() },
+        { title: 'navigation.roles_permissions', href: RoleController.index() },
     ],
 });

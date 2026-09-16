@@ -1,4 +1,5 @@
 import { Head } from '@inertiajs/react';
+import { useTranslation } from 'react-i18next';
 import UserController from '@/actions/App/Http/Controllers/Admin/UserController';
 import { UserForm } from '@/components/users/user-form';
 import type { AssignableRole } from '@/types';
@@ -9,16 +10,18 @@ type Props = {
 };
 
 export default function CreateUser({ roles, passwordRules }: Props) {
+    const { t } = useTranslation();
+
     return (
         <>
-            <Head title="Create user" />
+            <Head title={t('users.create.title')} />
 
             <div className="p-4 md:p-6">
                 <UserForm
                     action={UserController.store()}
                     passwordRules={passwordRules}
                     roles={roles}
-                    submitLabel="Create user"
+                    submitLabel={t('users.create.title')}
                 />
             </div>
         </>
@@ -27,7 +30,7 @@ export default function CreateUser({ roles, passwordRules }: Props) {
 
 CreateUser.layout = () => ({
     breadcrumbs: [
-        { title: 'Users', href: UserController.index() },
-        { title: 'Create user', href: UserController.create() },
+        { title: 'navigation.users', href: UserController.index() },
+        { title: 'users.create.title', href: UserController.create() },
     ],
 });

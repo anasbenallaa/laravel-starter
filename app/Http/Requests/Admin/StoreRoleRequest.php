@@ -38,7 +38,7 @@ class StoreRoleRequest extends FormRequest
                     ->undelegable($this->user(), (array) $this->input('permissions', []));
 
                 if ($undelegable !== []) {
-                    $validator->errors()->add('permissions', __('You cannot grant permissions you do not have: :permissions.', [
+                    $validator->errors()->add('permissions', __('errors.roles.grant_not_owned', [
                         'permissions' => implode(', ', $undelegable),
                     ]));
                 }

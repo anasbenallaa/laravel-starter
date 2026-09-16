@@ -2,6 +2,7 @@ import { ArrowRight01Icon, Search01Icon } from '@hugeicons/core-free-icons';
 import { router } from '@inertiajs/react';
 import * as DialogPrimitive from '@radix-ui/react-dialog';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { Icon } from '@/components/ui/icon';
 import { useRemoteSearch } from '@/hooks/use-remote-search';
 import { type SearchItem, useSearchItems } from '@/hooks/use-search-items';
@@ -63,6 +64,8 @@ const kbdClass =
  * dialog so the dialog survives the mobile sidebar sheet closing.
  */
 export function GlobalSearchTrigger({ onOpen }: { onOpen: () => void }) {
+    const { t } = useTranslation();
+
     return (
         <>
             <button
@@ -75,14 +78,16 @@ export function GlobalSearchTrigger({ onOpen }: { onOpen: () => void }) {
                     iconNode={Search01Icon}
                     className="size-4 shrink-0 opacity-70"
                 />
-                <span className="flex-1 text-left">Search</span>
-                <kbd className={kbdClass}>⌘K</kbd>
+                <span className="flex-1 text-start">{t('common.search')}</span>
+                <kbd className={kbdClass} dir="ltr">
+                    ⌘K
+                </kbd>
             </button>
 
             <button
                 type="button"
                 onClick={onOpen}
-                aria-label="Search"
+                aria-label={t('common.search')}
                 className="text-sidebar-foreground/70 hover:bg-sidebar-accent hover:text-sidebar-accent-foreground focus-visible:ring-sidebar-ring hidden size-8 shrink-0 items-center justify-center rounded-md transition-colors group-data-[collapsible=icon]:flex focus-visible:ring-2 focus-visible:outline-none"
             >
                 <Icon iconNode={Search01Icon} className="size-4" />
@@ -107,6 +112,7 @@ export function GlobalSearch({
     const [activeIndex, setActiveIndex] = useState(0);
     const inputRef = useRef<HTMLInputElement>(null);
     const listRef = useRef<HTMLDivElement>(null);
+    const { t } = useTranslation();
 
     const items = useSearchItems();
     const remote = useRemoteSearch(query, open);
@@ -214,7 +220,7 @@ export function GlobalSearch({
                     className="bg-popover text-popover-foreground data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 data-[state=closed]:zoom-out-95 data-[state=open]:zoom-in-95 fixed top-[12vh] left-1/2 z-50 w-[640px] max-w-[calc(100%-2rem)] -translate-x-1/2 overflow-hidden rounded-xl border shadow-2xl duration-150"
                 >
                     <DialogPrimitive.Title className="sr-only">
-                        Global search
+                        {t('search.title')}
                     </DialogPrimitive.Title>
 
                     <div className="flex items-center gap-3 border-b px-4">
@@ -227,12 +233,16 @@ export function GlobalSearch({
                             value={query}
                             onChange={(event) => setQuery(event.target.value)}
                             onKeyDown={onInputKeyDown}
-                            placeholder="Search pages, users, roles, permissions…"
+                            placeholder={t('search.placeholder')}
+                            aria-label={t('search.title')}
                             className="placeholder:text-muted-foreground h-14 flex-1 bg-transparent text-sm outline-none"
                             autoComplete="off"
                             spellCheck={false}
                         />
-                        <div className="flex shrink-0 items-center gap-1">
+                        <div
+                            className="flex shrink-0 items-center gap-1"
+                            dir="ltr"
+                        >
                             <kbd className={kbdClass}>/</kbd>
                             <kbd className={kbdClass}>⌘K</kbd>
                             <kbd className={kbdClass}>ESC</kbd>
@@ -246,8 +256,12 @@ export function GlobalSearch({
                         {flat.length === 0 ? (
                             <p className="text-muted-foreground px-3 py-10 text-center text-sm">
                                 {remote.loading
-                                    ? 'Searching…'
-                                    : `No results${query ? ` for “${query.trim()}”` : ''}.`}
+                                    ? t('search.searching')
+                                    : query.trim()
+                                      ? t('search.no_results_for', {
+                                            query: query.trim(),
+                                        })
+                                      : t('search.no_results')}
                             </p>
                         ) : (
                             groups.map((group) => (
@@ -274,7 +288,7 @@ export function GlobalSearch({
                                                 }
                                                 onClick={() => runItem(item)}
                                                 className={cn(
-                                                    'flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-left transition-colors',
+                                                    'flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-start transition-colors',
                                                     isActive
                                                         ? 'bg-accent text-accent-foreground'
                                                         : 'text-foreground',
@@ -299,7 +313,7 @@ export function GlobalSearch({
                                                 </span>
                                                 <Icon
                                                     iconNode={ArrowRight01Icon}
-                                                    className="text-muted-foreground/50 size-4 shrink-0"
+                                                    className="text-muted-foreground/50 size-4 shrink-0 rtl:rotate-180"
                                                 />
                                             </button>
                                         );

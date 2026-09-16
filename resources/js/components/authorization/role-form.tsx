@@ -1,4 +1,5 @@
 import { useForm } from '@inertiajs/react';
+import { useTranslation } from 'react-i18next';
 import { PermissionGroups } from '@/components/authorization/permission-groups';
 import { SystemRoleBadge } from '@/components/authorization/role-badge';
 import { FormSection } from '@/components/form-section';
@@ -31,11 +32,12 @@ export function RoleForm({
     delegablePermissions,
     initialName = '',
     initialPermissions = [],
-    submitLabel = 'Save',
+    submitLabel,
     readOnly = false,
     isSystem = false,
     notice,
 }: Props) {
+    const { t } = useTranslation();
     const form = useForm<{
         name: string;
         permissions: string[];
@@ -80,11 +82,14 @@ export function RoleForm({
             )}
 
             <FormSection
-                title="Role details"
-                description="How this role appears to people who manage access."
+                title={t('roles.form.details_title')}
+                description={t('roles.form.details_description')}
             >
                 <div className="grid gap-2 md:max-w-xl">
-                    <Label htmlFor="name">Role name{!readOnly && ' *'}</Label>
+                    <Label htmlFor="name">
+                        {t('roles.form.name')}
+                        {!readOnly && ' *'}
+                    </Label>
                     <div className="flex items-center gap-2">
                         <Input
                             id="name"
@@ -92,7 +97,7 @@ export function RoleForm({
                             onChange={(event) =>
                                 form.setData('name', event.target.value)
                             }
-                            placeholder="e.g. Manager"
+                            placeholder={t('roles.form.name_placeholder')}
                             autoComplete="off"
                             maxLength={100}
                             required
@@ -111,18 +116,20 @@ export function RoleForm({
             </FormSection>
 
             <FormSection
-                title="Permissions"
-                description="A role is a set of permissions. Its members inherit everything selected here."
+                title={t('roles.form.permissions_title')}
+                description={t('roles.form.permissions_description')}
             >
                 <div className="space-y-4">
                     <div className="flex flex-wrap items-center justify-between gap-3">
                         <p className="text-sm font-semibold tabular-nums">
-                            {form.data.permissions.length} / {allNames.length}{' '}
-                            permissions selected
+                            {t('roles.form.selected', {
+                                selected: form.data.permissions.length,
+                                count: allNames.length,
+                            })}
                             {!readOnly && delegablePermissions !== null && (
                                 <span className="text-muted-foreground font-normal">
-                                    {' '}
-                                    · You can only grant permissions you have.
+                                    {' · '}
+                                    {t('permissions.only_grant_own')}
                                 </span>
                             )}
                         </p>
@@ -134,14 +141,14 @@ export function RoleForm({
                                     onClick={() => setAll(true)}
                                     disabled={grantable.length === 0}
                                 >
-                                    Select all
+                                    {t('permissions.select_all')}
                                 </Button>
                                 <Button
                                     type="button"
                                     variant="ghost"
                                     onClick={() => setAll(false)}
                                 >
-                                    Deselect all
+                                    {t('permissions.deselect_all')}
                                 </Button>
                             </div>
                         )}
@@ -164,7 +171,7 @@ export function RoleForm({
                 <UnsavedChangesBar
                     visible={form.isDirty}
                     processing={form.processing}
-                    saveLabel={submitLabel}
+                    saveLabel={submitLabel ?? t('common.save')}
                     onReset={() => {
                         form.reset();
                         form.clearErrors();

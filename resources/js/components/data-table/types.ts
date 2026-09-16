@@ -5,11 +5,13 @@ type Breakpoint = 'sm' | 'md' | 'lg' | 'xl';
 export type DataTableColumn<T> = {
     /** Stable identifier, unique within the table. */
     id: string;
+    /** Already translated. */
     header: ReactNode;
     cell: (row: T) => ReactNode;
     /** Hide the column on screens narrower than this breakpoint. */
     visibleFrom?: Breakpoint;
-    align?: 'left' | 'right';
+    /** Logical alignment: follows the reading direction. */
+    align?: 'start' | 'end';
     /** Let long content wrap instead of staying on one line. */
     wrap?: boolean;
     /**
@@ -31,6 +33,7 @@ export type DataTableFilterOption = {
  */
 export type DataTableFilter = {
     key: string;
+    /** Translated heading shown above the choices, e.g. "Filter by role". */
     label: string;
     /** Current value; null means "all". */
     value: string | null;

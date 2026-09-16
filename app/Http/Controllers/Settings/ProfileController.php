@@ -40,7 +40,7 @@ class ProfileController extends Controller
 
         $request->user()->save();
 
-        Inertia::flash('toast', ['type' => 'success', 'message' => __('Profile updated.')]);
+        Inertia::flash('toast', ['type' => 'success', 'message' => __('flash.profile_updated')]);
 
         return to_route('profile.edit');
     }
@@ -64,7 +64,7 @@ class ProfileController extends Controller
 
         $user->forceFill(['avatar_path' => $path])->save();
 
-        Inertia::flash('toast', ['type' => 'success', 'message' => __('Profile picture updated.')]);
+        Inertia::flash('toast', ['type' => 'success', 'message' => __('flash.avatar_updated')]);
 
         return to_route('profile.edit');
     }
@@ -81,7 +81,7 @@ class ProfileController extends Controller
             $user->forceFill(['avatar_path' => null])->save();
         }
 
-        Inertia::flash('toast', ['type' => 'success', 'message' => __('Profile picture removed.')]);
+        Inertia::flash('toast', ['type' => 'success', 'message' => __('flash.avatar_removed')]);
 
         return to_route('profile.edit');
     }

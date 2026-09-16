@@ -110,7 +110,7 @@ class RoleController extends Controller
             $log->roleCreated($role);
         });
 
-        Inertia::flash('toast', ['type' => 'success', 'message' => __('Role created successfully.')]);
+        Inertia::flash('toast', ['type' => 'success', 'message' => __('flash.role_created')]);
 
         return to_route('admin.roles.index');
     }
@@ -151,7 +151,7 @@ class RoleController extends Controller
             $log->roleUpdated($role, $nameBefore, $permissionsBefore);
         });
 
-        Inertia::flash('toast', ['type' => 'success', 'message' => __('Role updated successfully.')]);
+        Inertia::flash('toast', ['type' => 'success', 'message' => __('flash.role_updated')]);
 
         return to_route('admin.roles.index');
     }
@@ -162,11 +162,11 @@ class RoleController extends Controller
     public function destroy(Request $request, Role $role, LogAccessChanges $log): RedirectResponse
     {
         if (SystemRole::isSystem($role)) {
-            throw ValidationException::withMessages(['role' => __('The Admin role cannot be deleted.')]);
+            throw ValidationException::withMessages(['role' => __('errors.roles.admin_undeletable')]);
         }
 
         if (! $this->delegation->canManageRole($request->user(), $role)) {
-            throw ValidationException::withMessages(['role' => __('You can only delete roles whose permissions you have.')]);
+            throw ValidationException::withMessages(['role' => __('errors.roles.delete_requires_permissions')]);
         }
 
         DB::transaction(function () use ($role, $log) {
@@ -174,7 +174,7 @@ class RoleController extends Controller
             $role->delete();
         });
 
-        Inertia::flash('toast', ['type' => 'success', 'message' => __('Role deleted successfully.')]);
+        Inertia::flash('toast', ['type' => 'success', 'message' => __('flash.role_deleted')]);
 
         return to_route('admin.roles.index');
     }

@@ -1,6 +1,8 @@
 import { Form, Head, Link, usePage } from '@inertiajs/react';
+import { useTranslation } from 'react-i18next';
 import ProfileController from '@/actions/App/Http/Controllers/Settings/ProfileController';
 import DeleteUser from '@/components/delete-user';
+import { LanguagePreference } from '@/components/language-preference';
 import InputError from '@/components/input-error';
 import ProfileAvatar from '@/components/profile-avatar';
 import SettingsCard from '@/components/settings-card';
@@ -23,16 +25,17 @@ export default function Profile({
     status?: string;
 }) {
     const { auth } = usePage<PageProps>().props;
+    const { t } = useTranslation();
 
     return (
         <>
-            <Head title="Profile settings" />
+            <Head title={t('settings.profile.head')} />
 
-            <h1 className="sr-only">Profile settings</h1>
+            <h1 className="sr-only">{t('settings.profile.head')}</h1>
 
             <SettingsCard
-                title="Profile picture"
-                description="Upload a JPG, PNG, or WebP image up to 1MB."
+                title={t('settings.profile.picture_title')}
+                description={t('settings.profile.picture_description')}
             >
                 <ProfileAvatar user={auth.user} />
             </SettingsCard>
@@ -43,22 +46,23 @@ export default function Profile({
             >
                 {({ processing, errors }) => (
                     <SettingsCard
-                        title="Profile details"
-                        description="Your display name and verified sign-in address."
+                        title={t('settings.profile.details_title')}
+                        description={t('settings.profile.details_description')}
                         action={
                             <Button
                                 variant="outline"
                                 disabled={processing}
                                 data-test="update-profile-button"
                             >
-                                Save
+                                {t('common.save')}
                             </Button>
                         }
                     >
                         <div className="grid gap-6 sm:grid-cols-2">
                             <div className="grid gap-2">
                                 <Label htmlFor="name">
-                                    Name <span className="text-primary">*</span>
+                                    {t('fields.name')}{' '}
+                                    <span className="text-primary">*</span>
                                 </Label>
 
                                 <Input
@@ -68,7 +72,7 @@ export default function Profile({
                                     name="name"
                                     required
                                     autoComplete="name"
-                                    placeholder="Full name"
+                                    placeholder={t('placeholders.full_name')}
                                 />
 
                                 <InputError message={errors.name} />
@@ -76,7 +80,7 @@ export default function Profile({
 
                             <div className="grid gap-2">
                                 <Label htmlFor="email">
-                                    Email{' '}
+                                    {t('fields.email')}{' '}
                                     <span className="text-primary">*</span>
                                 </Label>
 
@@ -88,7 +92,8 @@ export default function Profile({
                                     name="email"
                                     required
                                     autoComplete="username"
-                                    placeholder="Email address"
+                                    placeholder={t('fields.email_address')}
+                                    dir="ltr"
                                 />
 
                                 <InputError message={errors.email} />
@@ -99,21 +104,23 @@ export default function Profile({
                             auth.user.email_verified_at === null && (
                                 <div className="mt-4">
                                     <p className="text-muted-foreground text-sm">
-                                        Your email address is unverified.{' '}
+                                        {t('settings.profile.email_unverified')}{' '}
                                         <Link
                                             href={send()}
                                             as="button"
                                             className="text-foreground underline decoration-neutral-300 underline-offset-4 transition-colors duration-300 ease-out hover:decoration-current! dark:decoration-neutral-500"
                                         >
-                                            Click here to re-send the
-                                            verification email.
+                                            {t(
+                                                'settings.profile.resend_verification',
+                                            )}
                                         </Link>
                                     </p>
 
                                     {status === 'verification-link-sent' && (
                                         <div className="mt-2 text-sm font-medium text-green-600">
-                                            A new verification link has been
-                                            sent to your email address.
+                                            {t(
+                                                'settings.profile.verification_sent',
+                                            )}
                                         </div>
                                     )}
                                 </div>
@@ -121,6 +128,8 @@ export default function Profile({
                     </SettingsCard>
                 )}
             </Form>
+
+            <LanguagePreference />
 
             <DeleteUser />
         </>
@@ -130,7 +139,7 @@ export default function Profile({
 Profile.layout = {
     breadcrumbs: [
         {
-            title: 'Profile settings',
+            title: 'settings.profile.head',
             href: edit(),
         },
     ],

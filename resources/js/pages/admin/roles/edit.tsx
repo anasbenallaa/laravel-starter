@@ -1,4 +1,5 @@
 import { Head } from '@inertiajs/react';
+import { useTranslation } from 'react-i18next';
 import RoleController from '@/actions/App/Http/Controllers/Admin/RoleController';
 import { RoleForm } from '@/components/authorization/role-form';
 import type { DelegablePermissions, PermissionGroup } from '@/types';
@@ -22,6 +23,7 @@ export default function EditRole({
     permissionGroups,
     delegablePermissions,
 }: Props) {
+    const { t } = useTranslation();
     const allPermissions = permissionGroups.flatMap((group) =>
         group.permissions.map((permission) => permission.name),
     );
@@ -42,14 +44,14 @@ export default function EditRole({
                     initialPermissions={
                         role.is_system ? allPermissions : role.permissions
                     }
-                    submitLabel="Save changes"
+                    submitLabel={t('common.save_changes')}
                     readOnly={!canManage}
                     isSystem={role.is_system}
                     notice={
                         role.is_system
-                            ? 'System roles keep their name and always have every permission, including permissions created later.'
+                            ? t('roles.notice.system')
                             : !canManage
-                              ? 'This role includes permissions you do not have, so you can view it but not change it.'
+                              ? t('roles.notice.read_only')
                               : undefined
                     }
                 />
@@ -60,10 +62,11 @@ export default function EditRole({
 
 EditRole.layout = (props: Props) => ({
     breadcrumbs: [
-        { title: 'Roles & permissions', href: RoleController.index() },
+        { title: 'navigation.roles_permissions', href: RoleController.index() },
         {
             title: props.role.name,
             href: RoleController.edit(String(props.role.id)),
+            literal: true,
         },
     ],
 });

@@ -1,11 +1,14 @@
 import { Head } from '@inertiajs/react';
+import { useTranslation } from 'react-i18next';
 import { PlaceholderPattern } from '@/components/ui/placeholder-pattern';
 import { dashboard } from '@/routes';
 
 export default function Dashboard() {
+    const { t } = useTranslation();
+
     return (
         <>
-            <Head title="Dashboard" />
+            <Head title={t('navigation.dashboard')} />
             <div className="flex h-full flex-1 flex-col gap-4 overflow-x-auto rounded-xl p-4">
                 <div className="grid auto-rows-min gap-4 md:grid-cols-3">
                     <div className="border-sidebar-border/70 dark:border-sidebar-border relative aspect-video overflow-hidden rounded-xl border">
@@ -29,7 +32,7 @@ export default function Dashboard() {
 Dashboard.layout = () => ({
     breadcrumbs: [
         {
-            title: 'Dashboard',
+            title: 'navigation.dashboard',
             href: dashboard(),
         },
     ],

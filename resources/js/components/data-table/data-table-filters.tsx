@@ -1,4 +1,5 @@
 import { FilterIcon } from '@hugeicons/core-free-icons';
+import { useTranslation } from 'react-i18next';
 import { Button } from '@/components/ui/button';
 import {
     DropdownMenu,
@@ -23,6 +24,7 @@ type Props = {
 
 /** Filter icon button that opens one radio group per filter. */
 export function DataTableFilters({ filters, values, onChange }: Props) {
+    const { t } = useTranslation();
     const activeCount = filters.filter((filter) => values[filter.key]).length;
 
     return (
@@ -34,13 +36,13 @@ export function DataTableFilters({ filters, values, onChange }: Props) {
                     className="relative shrink-0"
                     aria-label={
                         activeCount > 0
-                            ? `Filters (${activeCount} active)`
-                            : 'Filters'
+                            ? t('table.filters_active', { count: activeCount })
+                            : t('table.filters')
                     }
                 >
                     <Icon iconNode={FilterIcon} />
                     {activeCount > 0 && (
-                        <span className="bg-primary text-primary-foreground ring-background absolute -top-1 -right-1 flex size-4 items-center justify-center rounded-full text-[10px] font-semibold ring-2">
+                        <span className="bg-primary text-primary-foreground ring-background absolute -end-1 -top-1 flex size-4 items-center justify-center rounded-full text-[10px] font-semibold ring-2">
                             {activeCount}
                         </span>
                     )}
@@ -51,7 +53,7 @@ export function DataTableFilters({ filters, values, onChange }: Props) {
                     <div key={filter.key}>
                         {index > 0 && <DropdownMenuSeparator />}
                         <DropdownMenuLabel className="text-muted-foreground text-xs">
-                            Filter by {filter.label.toLowerCase()}
+                            {filter.label}
                         </DropdownMenuLabel>
                         <DropdownMenuRadioGroup
                             value={values[filter.key] ?? ALL}
@@ -63,7 +65,7 @@ export function DataTableFilters({ filters, values, onChange }: Props) {
                             }
                         >
                             <DropdownMenuRadioItem value={ALL}>
-                                {filter.allLabel ?? 'All'}
+                                {filter.allLabel ?? t('table.all')}
                             </DropdownMenuRadioItem>
                             {filter.options.map((option) => (
                                 <DropdownMenuRadioItem
@@ -86,7 +88,7 @@ export function DataTableFilters({ filters, values, onChange }: Props) {
                                 )
                             }
                         >
-                            Clear filters
+                            {t('table.clear_filters')}
                         </DropdownMenuItem>
                     </>
                 )}

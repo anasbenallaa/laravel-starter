@@ -5,6 +5,7 @@ import {
     Search01Icon,
 } from '@hugeicons/core-free-icons';
 import { Fragment, type ReactNode } from 'react';
+import { useTranslation } from 'react-i18next';
 import { SimplePagination } from '@/components/simple-pagination';
 import { Icon } from '@/components/ui/icon';
 import { Input } from '@/components/ui/input';
@@ -66,8 +67,11 @@ type Props<T> = {
     groupLabel?: (group: string) => ReactNode;
     /** Extra controls on the right of the header, e.g. a "Create" button. */
     actions?: ReactNode;
-    /** Plural noun for the footer, e.g. "users". */
-    noun?: string;
+    /**
+     * Translated, pluralized row count for the footer, e.g.
+     * `(count) => t('users.count', { count })` → "42 users".
+     */
+    countLabel?: (count: number) => string;
     emptyMessage?: string;
     emptyFilteredMessage?: string;
 };
@@ -105,10 +109,13 @@ export function DataTable<T>({
     groupBy,
     groupLabel = (group) => group,
     actions,
-    noun = 'results',
-    emptyMessage = 'Nothing here yet.',
-    emptyFilteredMessage = 'No results match your search or filters.',
+    countLabel,
+    emptyMessage,
+    emptyFilteredMessage,
 }: Props<T>) {
+    const { t } = useTranslation();
+    const formatCount =
+        countLabel ?? ((count: number) => t('table.results', { count }));
     const serverSearch = search && !search.onChange ? search : undefined;
     const serverFilters = filters.filter((filter) => !filter.onChange);
 
@@ -161,7 +168,7 @@ export function DataTable<T>({
         cn(
             'px-4',
             column.visibleFrom && visibleFromClass[column.visibleFrom],
-            column.align === 'right' && 'text-right',
+            column.align === 'end' && 'text-end',
             column.className,
         );
 
@@ -186,7 +193,7 @@ export function DataTable<T>({
                             onValueChange={(value) =>
                                 value && onTabChange?.(value)
                             }
-                            aria-label="View"
+                            aria-label={t('table.view')}
                             className="w-full sm:w-auto"
                         >
                             {tabs.map((tab) => (
@@ -204,7 +211,7 @@ export function DataTable<T>({
                         <div className="relative min-w-0 flex-1 sm:w-64 sm:flex-none lg:w-56 xl:w-64">
                             <Icon
                                 iconNode={Search01Icon}
-                                className="text-muted-foreground pointer-events-none absolute top-1/2 left-3 size-4 -translate-y-1/2"
+                                className="text-muted-foreground pointer-events-none absolute start-3 top-1/2 size-4 -translate-y-1/2"
                             />
                             <Input
                                 type="search"
@@ -212,9 +219,13 @@ export function DataTable<T>({
                                 onChange={(event) =>
                                     onSearch(event.target.value)
                                 }
-                                placeholder={search.placeholder ?? 'Search'}
-                                aria-label={search.placeholder ?? 'Search'}
-                                className="pl-9"
+                                placeholder={
+                                    search.placeholder ?? t('common.search')
+                                }
+                                aria-label={
+                                    search.placeholder ?? t('common.search')
+                                }
+                                className="ps-9"
                             />
                         </div>
                     )}
@@ -274,8 +285,9 @@ export function DataTable<T>({
                                 className="text-muted-foreground px-4 py-16 text-center"
                             >
                                 {isFiltered
-                                    ? emptyFilteredMessage
-                                    : emptyMessage}
+                                    ? (emptyFilteredMessage ??
+                                      t('table.empty_filtered'))
+                                    : (emptyMessage ?? t('table.empty'))}
                             </TableCell>
                         </TableRow>
                     ) : (
@@ -321,12 +333,15 @@ export function DataTable<T>({
 
             {paginator && paginator.total > 0 && (
                 <div className="border-t px-4 py-3">
-                    <SimplePagination paginator={paginator} noun={noun} />
+                    <SimplePagination
+                        paginator={paginator}
+                        countLabel={formatCount}
+                    />
                 </div>
             )}
             {!paginator && data.length > 0 && (
                 <div className="text-muted-foreground border-t px-4 py-3 text-sm">
-                    {data.length} {noun}
+                    {formatCount(data.length)}
                 </div>
             )}
         </div>

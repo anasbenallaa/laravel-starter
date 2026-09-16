@@ -4,6 +4,7 @@ namespace App\Http\Middleware;
 
 use App\Authorization\SystemRole;
 use App\Http\Resources\NotificationResource;
+use App\Localization\Locales;
 use App\Models\User;
 use Illuminate\Http\Request;
 use Inertia\Middleware;
@@ -45,6 +46,12 @@ class HandleInertiaRequests extends Middleware
             'auth' => [
                 'user' => $request->user(),
                 ...$this->authorization($request->user()),
+            ],
+            'localization' => [
+                'locale' => app()->getLocale(),
+                'direction' => Locales::direction(app()->getLocale()),
+                'fallbackLocale' => Locales::default(),
+                'supportedLocales' => Locales::options(),
             ],
             'sidebarOpen' => ! $request->hasCookie('sidebar_state') || $request->cookie('sidebar_state') === 'true',
             'notificationSummary' => fn () => $this->notificationSummary($request),

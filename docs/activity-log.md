@@ -108,7 +108,8 @@ $activity->log(action: 'exported', description: 'Exported monthly report', metad
 
 - **Actions** are free-form, lowercase `snake_case`. Common ones are in `App\Activity\ActivityAction`.
 - **Actor:** defaults to the signed-in user; pass `actor:` explicitly in listeners or jobs.
-- **Description:** defaults to "<Action> <type> <label>", e.g. "Connected integration MeditLink".
+- **Description:** defaults to "<Action> <type> <label>", e.g. "Connected integration MeditLink". It is stored English data (search, CSV); the timeline shows a sentence translated at render time from the action, subject and metadata (`activitySentence()` in `lib/activity-presentation.ts`, keys `activities.sentence.*`), falling back to the description for actions without a sentence.
+- **Translations:** give a new action a label (`activities.action.{action}`) and, when it is common, a sentence (`activities.sentence.{action}`) in every `lang/*.json` file. See `docs/localization.md`.
 - **Metadata:** never put secrets, tokens or full request payloads here.
 
 ### Avoid duplicates

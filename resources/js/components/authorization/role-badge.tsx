@@ -1,3 +1,4 @@
+import { useTranslation } from 'react-i18next';
 import { Badge } from '@/components/ui/badge';
 import { ADMIN_ROLE } from '@/lib/permissions';
 import { cn } from '@/lib/utils';
@@ -14,6 +15,7 @@ export function RoleBadge({
             variant={name === ADMIN_ROLE ? 'default' : 'secondary'}
             className={cn('font-medium', className)}
         >
+            {/* Role names are data: never translated. */}
             {name}
         </Badge>
     );
@@ -21,9 +23,11 @@ export function RoleBadge({
 
 /** Marks the protected Admin role. */
 export function SystemRoleBadge() {
+    const { t } = useTranslation();
+
     return (
         <Badge variant="outline" className="text-muted-foreground">
-            System role
+            {t('roles.system_role')}
         </Badge>
     );
 }

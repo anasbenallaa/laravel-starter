@@ -62,7 +62,7 @@ class SecurityController extends Controller
 
         $activity->log(action: 'password_changed', description: 'Changed password', subject: $request->user());
 
-        Inertia::flash('toast', ['type' => 'success', 'message' => __('Password updated.')]);
+        Inertia::flash('toast', ['type' => 'success', 'message' => __('flash.password_updated')]);
 
         return back();
     }

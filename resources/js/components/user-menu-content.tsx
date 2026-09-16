@@ -8,6 +8,7 @@ import {
 } from '@hugeicons/core-free-icons';
 import { Link, router } from '@inertiajs/react';
 import { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import {
     DropdownMenuGroup,
     DropdownMenuItem,
@@ -25,11 +26,7 @@ import { edit } from '@/routes/profile';
 import { edit as editSecurity } from '@/routes/security';
 import type { User } from '@/types';
 
-const appearanceOptions: { value: Appearance; label: string }[] = [
-    { value: 'light', label: 'Light' },
-    { value: 'system', label: 'System' },
-    { value: 'dark', label: 'Dark' },
-];
+const appearanceOptions: Appearance[] = ['light', 'system', 'dark'];
 
 type Props = {
     user: User;
@@ -39,6 +36,7 @@ export function UserMenuContent({ user }: Props) {
     const cleanup = useMobileNavigation();
     const { appearance, updateAppearance } = useAppearance();
     const [appearanceOpen, setAppearanceOpen] = useState(false);
+    const { t } = useTranslation();
 
     const handleLogout = () => {
         cleanup();
@@ -48,7 +46,7 @@ export function UserMenuContent({ user }: Props) {
     return (
         <>
             <DropdownMenuLabel className="p-0 font-normal">
-                <div className="flex items-center gap-2 px-1 py-1.5 text-left text-sm">
+                <div className="flex items-center gap-2 px-1 py-1.5 text-start text-sm">
                     <UserInfo user={user} showEmail={true} />
                 </div>
             </DropdownMenuLabel>
@@ -61,8 +59,8 @@ export function UserMenuContent({ user }: Props) {
                         prefetch
                         onClick={cleanup}
                     >
-                        <Icon iconNode={UserIcon} className="mr-2" />
-                        Profile
+                        <Icon iconNode={UserIcon} className="me-2" />
+                        {t('navigation.profile')}
                     </Link>
                 </DropdownMenuItem>
 
@@ -73,8 +71,8 @@ export function UserMenuContent({ user }: Props) {
                         prefetch
                         onClick={cleanup}
                     >
-                        <Icon iconNode={Shield01Icon} className="mr-2" />
-                        Security
+                        <Icon iconNode={Shield01Icon} className="me-2" />
+                        {t('navigation.security')}
                     </Link>
                 </DropdownMenuItem>
 
@@ -86,12 +84,12 @@ export function UserMenuContent({ user }: Props) {
                         setAppearanceOpen((open) => !open);
                     }}
                 >
-                    <Icon iconNode={Settings01Icon} className="mr-2" />
-                    Appearance
+                    <Icon iconNode={Settings01Icon} className="me-2" />
+                    {t('navigation.appearance')}
                     <Icon
                         iconNode={ArrowDown01Icon}
                         className={cn(
-                            'ml-auto size-4 shrink-0 opacity-60 transition-transform duration-200',
+                            'ms-auto size-4 shrink-0 opacity-60 transition-transform duration-200',
                             appearanceOpen && 'rotate-180',
                         )}
                     />
@@ -105,10 +103,10 @@ export function UserMenuContent({ user }: Props) {
                 >
                     <div className="overflow-hidden">
                         {appearanceOpen &&
-                            appearanceOptions.map(({ value, label }) => (
+                            appearanceOptions.map((value) => (
                                 <DropdownMenuItem
                                     key={value}
-                                    className="cursor-pointer pl-8"
+                                    className="cursor-pointer ps-8"
                                     onSelect={(event) => {
                                         event.preventDefault();
                                         updateAppearance(value);
@@ -120,12 +118,12 @@ export function UserMenuContent({ user }: Props) {
                                                 'text-muted-foreground',
                                         )}
                                     >
-                                        {label}
+                                        {t(`appearance.${value}`)}
                                     </span>
                                     {appearance === value && (
                                         <Icon
                                             iconNode={Tick02Icon}
-                                            className="text-primary ml-auto size-4 shrink-0"
+                                            className="text-primary ms-auto size-4 shrink-0"
                                         />
                                     )}
                                 </DropdownMenuItem>
@@ -142,8 +140,8 @@ export function UserMenuContent({ user }: Props) {
                     onClick={handleLogout}
                     data-test="logout-button"
                 >
-                    <Icon iconNode={Logout01Icon} className="mr-2" />
-                    Log out
+                    <Icon iconNode={Logout01Icon} className="me-2" />
+                    {t('navigation.log_out')}
                 </Link>
             </DropdownMenuItem>
         </>

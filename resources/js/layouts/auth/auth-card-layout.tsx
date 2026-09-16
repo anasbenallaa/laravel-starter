@@ -1,6 +1,7 @@
 import { Link } from '@inertiajs/react';
 import type { PropsWithChildren } from 'react';
 import AppLogoIcon from '@/components/app-logo-icon';
+import { LanguageSwitcher } from '@/components/language-switcher';
 import {
     Card,
     CardContent,
@@ -20,7 +21,8 @@ export default function AuthCardLayout({
     description?: string;
 }>) {
     return (
-        <div className="bg-muted flex min-h-svh flex-col items-center justify-center gap-6 p-6 md:p-10">
+        <div className="bg-muted relative flex min-h-svh flex-col items-center justify-center gap-6 p-6 md:p-10">
+            <LanguageSwitcher className="absolute end-4 top-4" />
             <div className="flex w-full max-w-md flex-col gap-6">
                 <Link
                     href={home()}

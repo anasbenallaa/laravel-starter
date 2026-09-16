@@ -18,11 +18,13 @@ import {
     UserIcon,
 } from '@hugeicons/core-free-icons';
 import { router } from '@inertiajs/react';
+import type { TFunction } from 'i18next';
 import NotificationController from '@/actions/App/Http/Controllers/NotificationController';
 import type { AppIcon } from '@/components/ui/icon';
 import type { AppNotification, NotificationLevel } from '@/types';
 
 type LevelPresentation = {
+    /** Translation key. */
     label: string;
     icon: AppIcon;
     /** Classes for the tinted icon tile. */
@@ -35,23 +37,23 @@ type LevelPresentation = {
 export const notificationLevels: Record<NotificationLevel, LevelPresentation> =
     {
         info: {
-            label: 'Info',
+            label: 'notifications.level.info',
             icon: InformationCircleIcon,
             className: 'bg-sky-500/10 text-sky-600 dark:text-sky-400',
         },
         success: {
-            label: 'Success',
+            label: 'notifications.level.success',
             icon: CheckmarkCircle02Icon,
             className:
                 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400',
         },
         warning: {
-            label: 'Warning',
+            label: 'notifications.level.warning',
             icon: Alert02Icon,
             className: 'bg-amber-500/10 text-amber-600 dark:text-amber-400',
         },
         error: {
-            label: 'Error',
+            label: 'notifications.level.error',
             icon: CancelCircleIcon,
             className: 'bg-red-500/10 text-red-600 dark:text-red-400',
         },
@@ -95,6 +97,32 @@ export function notificationIcon(notification: AppNotification): AppIcon {
     );
 }
 
+/**
+ * Title, message and action label in the reader's language when the
+ * notification carries translation keys; the stored text otherwise. Values
+ * in parameters are data and are inserted as-is.
+ */
+export function notificationText(
+    notification: AppNotification,
+    t: TFunction,
+): { title: string; message: string; actionLabel: string | null } {
+    const { title, message, action, translation } = notification.data;
+    const parameters = translation?.parameters ?? {};
+    const translate = (key: string | null | undefined, fallback: string) =>
+        key ? t(key, { ...parameters, defaultValue: fallback }) : fallback;
+
+    return {
+        title: translate(translation?.title, title),
+        message: translate(translation?.message, message),
+        actionLabel: action
+            ? translate(
+                  translation?.action_label,
+                  action.label ?? t('notifications.view_details'),
+              )
+            : null,
+    };
+}
+
 /** 0 → null (no badge), 1–99 → "n", 100+ → "99+". */
 export function formatBadgeCount(count: number): string | null {
     if (count <= 0) {
@@ -103,9 +131,6 @@ export function formatBadgeCount(count: number): string | null {
 
     return count > 99 ? '99+' : String(count);
 }
-
-// Relative dates live in lib/dates.ts; re-exported for existing imports.
-export { formatRelativeTime } from '@/lib/dates';
 
 // ─── Actions ─────────────────────────────────────────────────────────
 // Every action redirects back on the server, which refreshes both the shared

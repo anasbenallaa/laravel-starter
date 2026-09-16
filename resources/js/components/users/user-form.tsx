@@ -1,8 +1,10 @@
 import { Mail01Icon } from '@hugeicons/core-free-icons';
 import { router, useForm } from '@inertiajs/react';
 import { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { SystemRoleBadge } from '@/components/authorization/role-badge';
 import { FormSection } from '@/components/form-section';
+import { Ltr } from '@/components/ltr';
 import InputError from '@/components/input-error';
 import PasswordInput from '@/components/password-input';
 import { Button } from '@/components/ui/button';
@@ -38,6 +40,7 @@ export function UserForm({
 }: Props) {
     const isEditing = initial !== undefined;
     const { can } = useAuthorization();
+    const { t } = useTranslation();
     const [sendingReset, setSendingReset] = useState(false);
     const [resetError, setResetError] = useState<string>();
     const form = useForm({
@@ -93,12 +96,12 @@ export function UserForm({
     return (
         <form onSubmit={submit} className="space-y-6 md:pb-24">
             <FormSection
-                title="User details"
-                description="The name and email address used to sign in."
+                title={t('users.form.details_title')}
+                description={t('users.form.details_description')}
                 className="grid gap-4 md:grid-cols-2"
             >
                 <div className="grid content-start gap-2">
-                    <Label htmlFor="name">Name *</Label>
+                    <Label htmlFor="name">{t('fields.name')} *</Label>
                     <Input
                         id="name"
                         value={form.data.name}
@@ -112,7 +115,7 @@ export function UserForm({
                     <InputError message={form.errors.name} />
                 </div>
                 <div className="grid content-start gap-2">
-                    <Label htmlFor="email">Email address *</Label>
+                    <Label htmlFor="email">{t('fields.email_address')} *</Label>
                     <Input
                         id="email"
                         type="email"
@@ -121,6 +124,7 @@ export function UserForm({
                             form.setData('email', event.target.value)
                         }
                         autoComplete="off"
+                        dir="ltr"
                         required
                     />
                     <InputError message={form.errors.email} />
@@ -129,8 +133,8 @@ export function UserForm({
 
             {isEditing ? (
                 <FormSection
-                    title="Password"
-                    description="Passwords are never set by administrators. Send the user an email with a secure link to choose a new password."
+                    title={t('fields.password')}
+                    description={t('users.form.password_reset_description')}
                     className="space-y-2"
                 >
                     {passwordResetUrl && can('users.reset_password') ? (
@@ -143,30 +147,32 @@ export function UserForm({
                             >
                                 <Icon iconNode={Mail01Icon} />
                                 {sendingReset
-                                    ? 'Sending…'
-                                    : 'Send password reset link'}
+                                    ? t('users.form.sending_reset')
+                                    : t('users.form.send_reset')}
                             </Button>
                             <p className="text-muted-foreground text-xs">
-                                The link is sent to {initial.email} and expires
-                                after a limited time.
+                                {t('users.form.reset_link_help_before')}
+                                <Ltr>{initial.email}</Ltr>
+                                {t('users.form.reset_link_help_after')}
                             </p>
                             <InputError message={resetError} />
                         </>
                     ) : (
                         <p className="text-muted-foreground text-sm">
-                            You don't have permission to send password reset
-                            links.
+                            {t('users.form.reset_not_allowed')}
                         </p>
                     )}
                 </FormSection>
             ) : (
                 <FormSection
-                    title="Password"
-                    description="Share it with the user securely; they can change it in their security settings."
+                    title={t('fields.password')}
+                    description={t('users.form.password_description')}
                     className="grid gap-4 md:grid-cols-2"
                 >
                     <div className="grid content-start gap-2">
-                        <Label htmlFor="password">Password *</Label>
+                        <Label htmlFor="password">
+                            {t('fields.password')} *
+                        </Label>
                         <PasswordInput
                             id="password"
                             value={form.data.password}
@@ -181,7 +187,7 @@ export function UserForm({
                     </div>
                     <div className="grid content-start gap-2">
                         <Label htmlFor="password_confirmation">
-                            Confirm password *
+                            {t('fields.password_confirmation')} *
                         </Label>
                         <PasswordInput
                             id="password_confirmation"
@@ -205,13 +211,13 @@ export function UserForm({
 
             {roles && (
                 <FormSection
-                    title="Roles"
-                    description="Optional. The user inherits every permission of each selected role."
+                    title={t('users.form.roles_title')}
+                    description={t('users.form.roles_description')}
                     className="space-y-3"
                 >
                     {roles.length === 0 ? (
                         <p className="text-muted-foreground text-sm">
-                            There are no roles yet.
+                            {t('roles.empty')}
                         </p>
                     ) : (
                         <div className="grid gap-2 sm:grid-cols-2 xl:grid-cols-3">
@@ -254,12 +260,22 @@ export function UserForm({
                                             </span>
                                             <span className="text-muted-foreground block text-xs">
                                                 {role.is_system
-                                                    ? 'Full access to everything'
-                                                    : `${role.permissions.length} ${role.permissions.length === 1 ? 'permission' : 'permissions'}`}
+                                                    ? t('roles.full_access')
+                                                    : t('permissions.count', {
+                                                          count: role
+                                                              .permissions
+                                                              .length,
+                                                      })}
                                                 {!role.assignable &&
-                                                    (role.is_system
-                                                        ? ' · Only an administrator can assign this'
-                                                        : ' · Includes permissions you do not have')}
+                                                    ` · ${
+                                                        role.is_system
+                                                            ? t(
+                                                                  'roles.only_admin_can_assign',
+                                                              )
+                                                            : t(
+                                                                  'roles.includes_missing_permissions',
+                                                              )
+                                                    }`}
                                             </span>
                                         </span>
                                     </label>

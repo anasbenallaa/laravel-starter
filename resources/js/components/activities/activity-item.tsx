@@ -4,6 +4,8 @@ import {
     Settings01Icon,
 } from '@hugeicons/core-free-icons';
 import { useState } from 'react';
+import { useTranslation } from 'react-i18next';
+import { Ltr } from '@/components/ltr';
 import { Icon } from '@/components/ui/icon';
 import {
     Tooltip,
@@ -11,14 +13,14 @@ import {
     TooltipTrigger,
 } from '@/components/ui/tooltip';
 import { UserInfo } from '@/components/user-info';
+import { useFormatters } from '@/hooks/use-formatters';
 import {
     actionPresentation,
+    activitySentence,
+    fieldLabel,
     formatActivityValue,
-    humanizeField,
-    sentenceAfterActor,
     toneClasses,
 } from '@/lib/activity-presentation';
-import { formatDateTime, formatRelativeTime } from '@/lib/dates';
 import { cn } from '@/lib/utils';
 import type { Activity, User } from '@/types';
 
@@ -39,7 +41,11 @@ export function ActivityItem({
     isLast = false,
 }: Props) {
     const [expanded, setExpanded] = useState(false);
-    const presentation = actionPresentation(activity.action);
+    const { t, i18n } = useTranslation();
+    const { relativeTime, dateTime } = useFormatters();
+    const presentation = actionPresentation(activity.action, t);
+    const format = (value: Activity['changes'][number]['old']) =>
+        formatActivityValue(value, t, i18n.language);
     const details =
         activity.changes.length > 0
             ? activity.changes.map((change) => ({
@@ -47,14 +53,14 @@ export function ActivityItem({
                   content: (
                       <>
                           <span className="text-muted-foreground decoration-muted-foreground/40 line-through">
-                              {formatActivityValue(change.old)}
+                              {format(change.old)}
                           </span>
                           <Icon
                               iconNode={ArrowRight01Icon}
-                              className="text-muted-foreground size-3 shrink-0"
+                              className="text-muted-foreground size-3 shrink-0 rtl:rotate-180"
                           />
                           <span className="text-foreground">
-                              {formatActivityValue(change.new)}
+                              {format(change.new)}
                           </span>
                       </>
                   ),
@@ -64,7 +70,7 @@ export function ActivityItem({
                       field: item.field,
                       content: (
                           <span className="text-foreground">
-                              {formatActivityValue(item.value)}
+                              {format(item.value)}
                           </span>
                       ),
                   })),
@@ -73,7 +79,7 @@ export function ActivityItem({
                           field,
                           content: (
                               <span className="text-foreground">
-                                  {formatActivityValue(value)}
+                                  {format(value)}
                               </span>
                           ),
                       }),
@@ -92,7 +98,7 @@ export function ActivityItem({
             {!isLast && (
                 <span
                     aria-hidden
-                    className="bg-border absolute top-9 bottom-0 left-4 w-px -translate-x-1/2"
+                    className="bg-border absolute start-4 top-9 bottom-0 w-px -translate-x-1/2 rtl:translate-x-1/2"
                 />
             )}
 
@@ -110,10 +116,7 @@ export function ActivityItem({
                 <div className="flex flex-wrap items-center gap-x-1.5 gap-y-1 text-sm">
                     <Actor activity={activity} showEmail={showEmail} />
                     <span className="text-muted-foreground break-words">
-                        {sentenceAfterActor(
-                            activity.description,
-                            activity.action,
-                        )}
+                        {activitySentence(activity, t)}
                     </span>
                 </div>
 
@@ -123,11 +126,11 @@ export function ActivityItem({
                             dateTime={activity.created_at}
                             className="text-muted-foreground/80 block w-fit text-xs"
                         >
-                            {formatRelativeTime(activity.created_at)}
+                            {relativeTime(activity.created_at)}
                         </time>
                     </TooltipTrigger>
                     <TooltipContent>
-                        {formatDateTime(activity.created_at)}
+                        {dateTime(activity.created_at)}
                     </TooltipContent>
                 </Tooltip>
 
@@ -139,7 +142,7 @@ export function ActivityItem({
                                 className="grid gap-1 sm:grid-cols-[10rem_1fr] sm:gap-3"
                             >
                                 <dt className="text-muted-foreground font-medium">
-                                    {humanizeField(row.field)}
+                                    {fieldLabel(row.field, t)}
                                 </dt>
                                 <dd className="flex min-w-0 flex-wrap items-center gap-1.5 break-words">
                                     {row.content}
@@ -164,10 +167,12 @@ export function ActivityItem({
                             )}
                         />
                         {expanded
-                            ? 'Hide details'
+                            ? t('activities.hide_details')
                             : activity.changes.length > 0
-                              ? `Show ${hiddenCount} more ${hiddenCount === 1 ? 'change' : 'changes'}`
-                              : 'Show details'}
+                              ? t('activities.show_more_changes', {
+                                    count: hiddenCount,
+                                })
+                              : t('activities.show_details')}
                     </button>
                 )}
             </div>
@@ -182,6 +187,8 @@ function Actor({
     activity: Activity;
     showEmail: boolean;
 }) {
+    const { t } = useTranslation();
+
     if (!activity.user) {
         const deleted = activity.user_id !== null;
 
@@ -190,7 +197,9 @@ function Actor({
                 <span className="bg-muted text-muted-foreground flex size-5 items-center justify-center rounded-full">
                     <Icon iconNode={Settings01Icon} className="size-3" />
                 </span>
-                {deleted ? 'Deleted user' : 'System'}
+                {deleted
+                    ? t('activities.actor.deleted_user')
+                    : t('activities.actor.system')}
             </span>
         );
     }
@@ -212,7 +221,7 @@ function Actor({
             {activity.user.name}
             {showEmail && (
                 <span className="text-muted-foreground hidden font-normal sm:inline">
-                    ({activity.user.email})
+                    (<Ltr>{activity.user.email}</Ltr>)
                 </span>
             )}
         </span>

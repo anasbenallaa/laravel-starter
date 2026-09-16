@@ -1,4 +1,5 @@
 import { useEffect, useRef } from 'react';
+import { useTranslation } from 'react-i18next';
 import { Button } from '@/components/ui/button';
 import { Spinner } from '@/components/ui/spinner';
 import { cn } from '@/lib/utils';
@@ -33,9 +34,10 @@ export function UnsavedChangesBar({
     onSave,
     form,
     processing = false,
-    message = "You have changes that haven't been saved yet.",
-    saveLabel = 'Save changes',
+    message,
+    saveLabel,
 }: Props) {
+    const { t } = useTranslation();
     const saveButton = useRef<HTMLButtonElement>(null);
 
     const save = () => {
@@ -107,19 +109,19 @@ export function UnsavedChangesBar({
             {/* Desktop: floating pill, centred on the full page width. */}
             <div
                 role="region"
-                aria-label="Unsaved changes"
+                aria-label={t('unsaved.label')}
                 aria-hidden={!visible}
                 inert={!visible}
                 data-state={visible ? 'visible' : 'hidden'}
                 className={cn(
-                    'bg-popover/95 text-popover-foreground fixed bottom-6 left-1/2 z-40 hidden -translate-x-1/2 items-center gap-5 rounded-xl border py-1.5 pr-1.5 pl-4 shadow-2xl backdrop-blur transition-[translate,opacity] duration-300 ease-out md:flex',
+                    'bg-popover/95 text-popover-foreground fixed bottom-6 left-1/2 z-40 hidden -translate-x-1/2 items-center gap-5 rounded-xl border py-1.5 ps-4 pe-1.5 shadow-2xl backdrop-blur transition-[translate,opacity] duration-300 ease-out md:flex',
                     visible
                         ? 'translate-y-0 opacity-100'
                         : 'pointer-events-none translate-y-[calc(100%+1.5rem)] opacity-0',
                 )}
             >
                 <p className="text-sm font-medium whitespace-nowrap">
-                    {message}
+                    {message ?? t('unsaved.message')}
                 </p>
                 <div className="flex items-center gap-2">
                     <Button
@@ -129,13 +131,13 @@ export function UnsavedChangesBar({
                         onClick={onReset}
                         disabled={processing}
                     >
-                        Reset
+                        {t('unsaved.reset')}
                     </Button>
                     <Button ref={saveButton} size="sm" {...saveProps}>
                         {processing && <Spinner />}
-                        {saveLabel}
+                        {saveLabel ?? t('common.save_changes')}
                         <kbd className="border-primary-foreground/30 bg-primary-foreground/10 hidden rounded border px-1.5 py-0.5 font-mono text-[10px] leading-none font-normal lg:inline">
-                            Enter
+                            {t('unsaved.enter_key')}
                         </kbd>
                     </Button>
                 </div>
@@ -144,7 +146,7 @@ export function UnsavedChangesBar({
             {/* Mobile: replaces the page header. */}
             <div
                 role="region"
-                aria-label="Unsaved changes"
+                aria-label={t('unsaved.label')}
                 aria-hidden={!visible}
                 inert={!visible}
                 data-state={visible ? 'visible' : 'hidden'}
@@ -155,7 +157,9 @@ export function UnsavedChangesBar({
                         : 'pointer-events-none -translate-y-full',
                 )}
             >
-                <p className="truncate text-sm font-medium">Unsaved changes</p>
+                <p className="truncate text-sm font-medium">
+                    {t('unsaved.label')}
+                </p>
                 <div className="flex shrink-0 items-center gap-2">
                     <Button
                         type="button"
@@ -164,11 +168,11 @@ export function UnsavedChangesBar({
                         onClick={onReset}
                         disabled={processing}
                     >
-                        Reset
+                        {t('unsaved.reset')}
                     </Button>
                     <Button size="sm" {...saveProps}>
                         {processing && <Spinner />}
-                        Save
+                        {t('common.save')}
                     </Button>
                 </div>
             </div>

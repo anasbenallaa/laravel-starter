@@ -1,3 +1,4 @@
+import { Ltr } from '@/components/ltr';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { useInitials } from '@/hooks/use-initials';
 import { cn } from '@/lib/utils';
@@ -33,11 +34,11 @@ export function UserInfo({
                 </AvatarFallback>
             </Avatar>
             {showName ? (
-                <div className="grid flex-1 text-left text-sm leading-tight">
+                <div className="grid flex-1 text-start text-sm leading-tight">
                     <span className="truncate font-medium">{user.name}</span>
                     {showEmail ? (
                         <span className="text-muted-foreground truncate text-xs">
-                            {user.email}
+                            <Ltr>{user.email}</Ltr>
                         </span>
                     ) : null}
                 </div>

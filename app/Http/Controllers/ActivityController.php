@@ -67,7 +67,7 @@ class ActivityController extends Controller
                 return;
             }
 
-            fputcsv($output, ActivityCsv::HEADERS, escape: '');
+            fputcsv($output, ActivityCsv::headers(), escape: '');
 
             $feed->query()
                 ->with('user:id,name,email')

@@ -13,6 +13,7 @@ import {
 } from '@hugeicons/core-free-icons';
 import { router } from '@inertiajs/react';
 import { useMemo } from 'react';
+import { useTranslation } from 'react-i18next';
 import ActivityController from '@/actions/App/Http/Controllers/ActivityController';
 import RoleController from '@/actions/App/Http/Controllers/Admin/RoleController';
 import UserController from '@/actions/App/Http/Controllers/Admin/UserController';
@@ -35,7 +36,10 @@ export type SearchItem = {
     badge: string;
     /** Secondary line shown under the title. */
     description: string;
-    /** Extra terms that should match the query without being displayed. */
+    /**
+     * Extra terms that should match the query without being displayed (English;
+     * the translated title and description are matched too).
+     */
     keywords?: string[];
     icon: AppIcon;
     /** Internal URL to visit when the item is chosen. */
@@ -53,48 +57,47 @@ export type SearchItem = {
 export function useSearchItems(): SearchItem[] {
     const { updateAppearance } = useAppearance();
     const { canAny } = useAuthorization();
+    const { t } = useTranslation();
 
     return useMemo<SearchItem[]>(
         () =>
             [
                 {
                     id: 'nav.dashboard',
-                    title: 'Dashboard',
-                    group: 'Navigation',
-                    badge: 'Navigation',
-                    description: 'Go to the main dashboard',
+                    title: t('navigation.dashboard'),
+                    group: t('search.group.navigation'),
+                    badge: t('search.group.navigation'),
+                    description: t('search.items.dashboard'),
                     keywords: ['home', 'overview', 'start'],
                     icon: Home09Icon,
                     href: dashboard().url,
                 },
                 {
                     id: 'nav.notifications',
-                    title: 'Notifications',
-                    group: 'Navigation',
-                    badge: 'Navigation',
-                    description: 'View and manage your notifications',
+                    title: t('navigation.notifications'),
+                    group: t('search.group.navigation'),
+                    badge: t('search.group.navigation'),
+                    description: t('search.items.notifications'),
                     keywords: ['alerts', 'inbox', 'unread', 'bell'],
                     icon: Notification03Icon,
                     href: notificationsIndex().url,
                 },
                 {
                     id: 'nav.activities',
-                    title: 'Activities',
-                    group: 'Navigation',
-                    badge: 'Navigation',
-                    description:
-                        'History of actions performed in the application',
+                    title: t('navigation.activities'),
+                    group: t('search.group.navigation'),
+                    badge: t('search.group.navigation'),
+                    description: t('search.items.activities'),
                     keywords: ['audit', 'history', 'log', 'timeline'],
                     icon: Activity01Icon,
                     href: ActivityController.index.url(),
                 },
                 {
                     id: 'admin.users',
-                    title: 'Users',
-                    group: 'Administration',
-                    badge: 'Admin',
-                    description:
-                        'View users and manage their roles and permissions',
+                    title: t('navigation.users'),
+                    group: t('navigation.group.administration'),
+                    badge: t('search.badge.admin'),
+                    description: t('search.items.users'),
                     keywords: ['people', 'accounts', 'access', 'members'],
                     icon: UserGroupIcon,
                     href: UserController.index.url(),
@@ -102,11 +105,10 @@ export function useSearchItems(): SearchItem[] {
                 },
                 {
                     id: 'admin.roles',
-                    title: 'Roles & permissions',
-                    group: 'Administration',
-                    badge: 'Admin',
-                    description:
-                        'Create and edit roles, and see every permission and who has it',
+                    title: t('navigation.roles_permissions'),
+                    group: t('navigation.group.administration'),
+                    badge: t('search.badge.admin'),
+                    description: t('search.items.roles'),
                     keywords: [
                         'rbac',
                         'access',
@@ -120,22 +122,20 @@ export function useSearchItems(): SearchItem[] {
                 },
                 {
                     id: 'nav.profile',
-                    title: 'Profile settings',
-                    group: 'Settings',
-                    badge: 'Settings',
-                    description:
-                        'Update your name, email address, and profile picture',
+                    title: t('settings.profile.head'),
+                    group: t('search.group.settings'),
+                    badge: t('search.group.settings'),
+                    description: t('settings.profile.description'),
                     keywords: ['account', 'avatar', 'name', 'email'],
                     icon: UserIcon,
                     href: editProfile().url,
                 },
                 {
                     id: 'nav.security',
-                    title: 'Security settings',
-                    group: 'Settings',
-                    badge: 'Settings',
-                    description:
-                        'Manage your password, two-factor authentication, and passkeys',
+                    title: t('settings.security.head'),
+                    group: t('search.group.settings'),
+                    badge: t('search.group.settings'),
+                    description: t('settings.security.description'),
                     keywords: [
                         'password',
                         '2fa',
@@ -148,41 +148,40 @@ export function useSearchItems(): SearchItem[] {
                 },
                 {
                     id: 'appearance.light',
-                    title: 'Switch to light theme',
-                    group: 'Appearance',
-                    badge: 'Theme',
-                    description: 'Use the light color scheme',
+                    title: t('search.items.light_title'),
+                    group: t('navigation.appearance'),
+                    badge: t('search.badge.theme'),
+                    description: t('search.items.light'),
                     keywords: ['theme', 'mode', 'bright', 'day'],
                     icon: Sun03Icon,
                     onSelect: () => updateAppearance('light'),
                 },
                 {
                     id: 'appearance.dark',
-                    title: 'Switch to dark theme',
-                    group: 'Appearance',
-                    badge: 'Theme',
-                    description: 'Use the dark color scheme',
+                    title: t('search.items.dark_title'),
+                    group: t('navigation.appearance'),
+                    badge: t('search.badge.theme'),
+                    description: t('search.items.dark'),
                     keywords: ['theme', 'mode', 'night'],
                     icon: Moon02Icon,
                     onSelect: () => updateAppearance('dark'),
                 },
                 {
                     id: 'appearance.system',
-                    title: 'Match system theme',
-                    group: 'Appearance',
-                    badge: 'Theme',
-                    description: 'Follow your operating system setting',
+                    title: t('search.items.system_title'),
+                    group: t('navigation.appearance'),
+                    badge: t('search.badge.theme'),
+                    description: t('search.items.system'),
                     keywords: ['theme', 'mode', 'auto'],
                     icon: Settings01Icon,
                     onSelect: () => updateAppearance('system'),
                 },
                 {
                     id: 'action.logout',
-                    title: 'Log out',
-                    group: 'Account',
-                    badge: 'Action',
-                    description:
-                        'End your session and return to the login screen',
+                    title: t('navigation.log_out'),
+                    group: t('search.group.account'),
+                    badge: t('search.badge.action'),
+                    description: t('search.items.log_out'),
                     keywords: ['sign out', 'exit', 'leave'],
                     icon: Logout01Icon,
                     onSelect: () => {
@@ -199,6 +198,6 @@ export function useSearchItems(): SearchItem[] {
                             : [item.permission],
                     ),
             ),
-        [updateAppearance, canAny],
+        [updateAppearance, canAny, t],
     );
 }
