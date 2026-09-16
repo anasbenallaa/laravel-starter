@@ -62,7 +62,10 @@ export function NotificationBell() {
             <DropdownMenuContent
                 align="end"
                 sideOffset={8}
-                className="w-[calc(100vw-2rem)] max-w-sm p-0 sm:w-96"
+                // Phones: full width minus 16px each side, kept 16px from both
+                // edges, so the panel sits centered. sm+: anchored to the bell.
+                collisionPadding={16}
+                className="w-[calc(100vw-2rem)] p-0 sm:w-96"
             >
                 <div className="flex items-center justify-between px-4 py-3">
                     <p className="text-sm font-semibold">Notifications</p>
