@@ -10,7 +10,13 @@ import {
 import { useCurrentUrl } from '@/hooks/use-current-url';
 import type { NavItem } from '@/types';
 
-export function NavMain({ items }: { items: NavItem[] }) {
+export function NavMain({
+    items,
+    onNavigate,
+}: {
+    items: NavItem[];
+    onNavigate?: () => void;
+}) {
     const { isCurrentUrl } = useCurrentUrl();
 
     return (
@@ -24,7 +30,11 @@ export function NavMain({ items }: { items: NavItem[] }) {
                             isActive={isCurrentUrl(item.href)}
                             tooltip={{ children: item.title }}
                         >
-                            <Link href={item.href} prefetch>
+                            <Link
+                                href={item.href}
+                                prefetch
+                                onClick={onNavigate}
+                            >
                                 {item.icon && <Icon iconNode={item.icon} />}
                                 <span>{item.title}</span>
                             </Link>
