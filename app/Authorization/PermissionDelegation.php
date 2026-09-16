@@ -67,4 +67,40 @@ final class PermissionDelegation
 
         return $this->undelegable($actor, $role->permissions->pluck('name')->all()) === [];
     }
+
+    /**
+     * Whether the actor may edit or delete this user's account. Changing
+     * someone's email or password lets you sign in as them, so non-admins may
+     * only manage users whose permissions they fully hold, and never admins.
+     */
+    public function canManageUser(User $actor, User $target): bool
+    {
+        if ($this->isUnrestricted($actor)) {
+            return true;
+        }
+
+        if (SystemRole::isAdmin($target)) {
+            return false;
+        }
+
+        return $this->undelegable($actor, $target->getAllPermissions()->pluck('name')->all()) === [];
+    }
+
+    /**
+     * Names of the given roles the actor may NOT assign or remove.
+     *
+     * @param  iterable<string>  $roleNames
+     * @return Collection<int, string>
+     */
+    public function unmanageableRoles(User $actor, iterable $roleNames): Collection
+    {
+        return Role::query()
+            ->with('permissions:id,name')
+            ->where('guard_name', PermissionRegistry::guard())
+            ->whereIn('name', Collection::make($roleNames)->all())
+            ->get()
+            ->reject(fn (Role $role) => $this->canManageRole($actor, $role))
+            ->map(fn (Role $role) => (string) $role->name)
+            ->values();
+    }
 }

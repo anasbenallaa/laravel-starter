@@ -11,7 +11,6 @@ use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Support\Collection;
 use Illuminate\Validation\Rule;
 use Illuminate\Validation\Validator;
-use Spatie\Permission\Models\Role;
 
 class UpdateUserAccessRequest extends FormRequest
 {
@@ -61,13 +60,7 @@ class UpdateUserAccessRequest extends FormRequest
                 $requestedRoles = Collection::make((array) $this->input('roles', []));
                 $changedRoles = $requestedRoles->diff($currentRoles)->merge($currentRoles->diff($requestedRoles))->unique();
 
-                $unmanageable = Role::query()
-                    ->with('permissions:id,name')
-                    ->where('guard_name', PermissionRegistry::guard())
-                    ->whereIn('name', $changedRoles)
-                    ->get()
-                    ->reject(fn (Role $role) => $delegation->canManageRole($actor, $role))
-                    ->pluck('name');
+                $unmanageable = $delegation->unmanageableRoles($actor, $changedRoles->all());
 
                 if ($unmanageable->isNotEmpty()) {
                     $validator->errors()->add('roles', $unmanageable->contains(SystemRole::ADMIN)

@@ -93,8 +93,28 @@ Administrators can now build roles such as "Order Approver" from
 - **Permissions are defined in code:** nobody, including Admins, can create,
   rename or delete permissions over HTTP. `permissions:sync` rejects names
   that don't follow `resource.action`.
+- **Managing user accounts:** changing someone's email or password lets you
+  sign in as them. So a non-Admin can only edit or delete users whose
+  permissions they fully hold, never an Admin. Nobody can delete their own
+  account from the users page (profile settings handles that), and the last
+  Admin can't be deleted.
+- **New users:** roles chosen when creating a user follow the same delegation
+  rules as Manage access. Accounts created by an administrator are marked as
+  email-verified.
 - **Atomic updates:** a user's roles and direct permissions are updated in one
   transaction.
+
+## Users page
+
+`/admin/users` lists users, with search and a role filter. Each action needs
+its own permission:
+
+- **Create user:** `users.create`. Name, email, password and optional roles.
+- **Edit user:** `users.update`. Name, email and an optional new password.
+- **Manage access:** `users.update`. Roles and direct permissions.
+- **Delete user:** `users.delete`. `App\Actions\Users\DeleteUser` also removes
+  the user's notifications and avatar; profile-settings deletion uses the same
+  action.
 
 ## Roles & permissions page
 

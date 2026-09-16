@@ -1,11 +1,28 @@
-import { Search01Icon, UserLock01Icon } from '@hugeicons/core-free-icons';
-import { Head, Link } from '@inertiajs/react';
+import {
+    Add01Icon,
+    Delete02Icon,
+    Edit02Icon,
+    MoreHorizontalIcon,
+    Search01Icon,
+    UserLock01Icon,
+} from '@hugeicons/core-free-icons';
+import { Head, Link, router } from '@inertiajs/react';
+import { useState } from 'react';
 import UserAccessController from '@/actions/App/Http/Controllers/Admin/UserAccessController';
 import UserController from '@/actions/App/Http/Controllers/Admin/UserController';
 import { RoleBadge } from '@/components/authorization/role-badge';
+import { ConfirmDialog } from '@/components/confirm-dialog';
 import Heading from '@/components/heading';
+import InputError from '@/components/input-error';
 import { SimplePagination } from '@/components/simple-pagination';
 import { Button } from '@/components/ui/button';
+import {
+    DropdownMenu,
+    DropdownMenuContent,
+    DropdownMenuItem,
+    DropdownMenuSeparator,
+    DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
 import { Icon } from '@/components/ui/icon';
 import { Input } from '@/components/ui/input';
 import {
@@ -43,16 +60,43 @@ export default function UsersIndex({ users, roles, filters }: Props) {
         filters,
     );
     const hasFilters = Boolean(filters.search || filters.role);
+    const [deleting, setDeleting] = useState<UserListItem | null>(null);
+    const [processing, setProcessing] = useState(false);
+    const [deleteError, setDeleteError] = useState<string>();
+
+    const confirmDelete = () => {
+        if (!deleting) {
+            return;
+        }
+
+        router.delete(UserController.destroy.url(deleting.id), {
+            preserveScroll: true,
+            onStart: () => setProcessing(true),
+            onFinish: () => setProcessing(false),
+            onSuccess: () => setDeleting(null),
+            onError: (errors) => setDeleteError(errors.user),
+        });
+    };
 
     return (
         <>
             <Head title="Users" />
 
             <div className="flex flex-col gap-6 p-4 md:p-6">
-                <Heading
-                    title="Users"
-                    description="Everyone with an account, and the roles and permissions they have."
-                />
+                <div className="flex flex-wrap items-start justify-between gap-4">
+                    <Heading
+                        title="Users"
+                        description="Everyone with an account, and the roles and permissions they have."
+                    />
+                    {can('users.create') && (
+                        <Button asChild>
+                            <Link href={UserController.create.url()}>
+                                <Icon iconNode={Add01Icon} />
+                                Create user
+                            </Link>
+                        </Button>
+                    )}
+                </div>
 
                 <div className="flex flex-col gap-2 sm:flex-row">
                     <div className="relative flex-1 sm:max-w-sm">
@@ -183,32 +227,43 @@ export default function UsersIndex({ users, roles, filters }: Props) {
                                                 : '—'}
                                         </TableCell>
                                         <TableCell>
-                                            {can('users.update') && (
-                                                <Button
-                                                    variant="outline"
-                                                    size="sm"
-                                                    asChild
-                                                >
-                                                    <Link
-                                                        href={UserAccessController.edit.url(
-                                                            user.id,
-                                                        )}
+                                            <div className="flex items-center justify-end gap-1">
+                                                {can('users.update') && (
+                                                    <Button
+                                                        variant="outline"
+                                                        size="sm"
+                                                        asChild
                                                     >
-                                                        <Icon
-                                                            iconNode={
-                                                                UserLock01Icon
-                                                            }
-                                                        />
-                                                        <span className="hidden sm:inline">
-                                                            Manage access
-                                                        </span>
-                                                        <span className="sr-only sm:hidden">
-                                                            Manage access for{' '}
-                                                            {user.name}
-                                                        </span>
-                                                    </Link>
-                                                </Button>
-                                            )}
+                                                        <Link
+                                                            href={UserAccessController.edit.url(
+                                                                user.id,
+                                                            )}
+                                                        >
+                                                            <Icon
+                                                                iconNode={
+                                                                    UserLock01Icon
+                                                                }
+                                                            />
+                                                            <span className="hidden sm:inline">
+                                                                Manage access
+                                                            </span>
+                                                            <span className="sr-only sm:hidden">
+                                                                Manage access
+                                                                for {user.name}
+                                                            </span>
+                                                        </Link>
+                                                    </Button>
+                                                )}
+                                                <UserActions
+                                                    user={user}
+                                                    onDelete={() => {
+                                                        setDeleteError(
+                                                            undefined,
+                                                        );
+                                                        setDeleting(user);
+                                                    }}
+                                                />
+                                            </div>
                                         </TableCell>
                                     </TableRow>
                                 ))}
@@ -219,7 +274,79 @@ export default function UsersIndex({ users, roles, filters }: Props) {
 
                 <SimplePagination paginator={users} noun="users" />
             </div>
+
+            <ConfirmDialog
+                open={deleting !== null}
+                onOpenChange={(open) => !open && setDeleting(null)}
+                title={`Delete ${deleting?.name}?`}
+                confirmLabel="Delete user"
+                processing={processing}
+                onConfirm={confirmDelete}
+            >
+                <p className="text-foreground">
+                    The account for{' '}
+                    <span className="font-medium">{deleting?.email}</span> will
+                    be permanently deleted, along with their roles, direct
+                    permissions and notifications. They will no longer be able
+                    to sign in.
+                </p>
+                <p>This action cannot be undone.</p>
+                <InputError message={deleteError} />
+            </ConfirmDialog>
         </>
+    );
+}
+
+/**
+ * Edit / delete menu. Hidden when the user can't manage this account (for
+ * example an admin, or someone with more access); the server enforces the
+ * same rules.
+ */
+function UserActions({
+    user,
+    onDelete,
+}: {
+    user: UserListItem;
+    onDelete: () => void;
+}) {
+    const { can } = useAuthorization();
+    const canEdit = can('users.update') && user.can_manage;
+    const canDelete = can('users.delete') && user.can_manage && !user.is_self;
+
+    if (!canEdit && !canDelete) {
+        return null;
+    }
+
+    return (
+        <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+                <Button
+                    variant="ghost"
+                    size="icon"
+                    className="size-8"
+                    aria-label={`Actions for ${user.name}`}
+                >
+                    <Icon iconNode={MoreHorizontalIcon} />
+                </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end">
+                {canEdit && (
+                    <DropdownMenuItem asChild>
+                        <Link href={UserController.edit.url(user.id)}>
+                            <Icon iconNode={Edit02Icon} />
+                            Edit user
+                        </Link>
+                    </DropdownMenuItem>
+                )}
+                {canEdit && canDelete && <DropdownMenuSeparator />}
+                {canDelete && (
+                    <DropdownMenuItem variant="destructive" onSelect={onDelete}>
+                        <Icon iconNode={Delete02Icon} />
+                        Delete user
+                    </DropdownMenuItem>
+                )}
+            </DropdownMenuContent>
+        </DropdownMenu>
     );
 }
 

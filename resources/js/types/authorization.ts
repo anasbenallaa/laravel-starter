@@ -51,6 +51,9 @@ export type UserListItem = {
     avatar: string | null;
     roles: string[];
     permissions: string[];
+    is_self: boolean;
+    /** Whether the current user may edit or delete this user. */
+    can_manage: boolean;
     created_at: string | null;
 };
 

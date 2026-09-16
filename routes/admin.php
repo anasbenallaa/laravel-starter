@@ -11,6 +11,21 @@ Route::middleware(['auth', 'verified'])->prefix('admin')->name('admin.')->group(
     Route::get('users', [UserController::class, 'index'])
         ->middleware('can:users.view')
         ->name('users.index');
+    Route::get('users/create', [UserController::class, 'create'])
+        ->middleware('can:users.create')
+        ->name('users.create');
+    Route::post('users', [UserController::class, 'store'])
+        ->middleware('can:users.create')
+        ->name('users.store');
+    Route::get('users/{user}/edit', [UserController::class, 'edit'])
+        ->middleware('can:users.update')
+        ->name('users.edit');
+    Route::put('users/{user}', [UserController::class, 'update'])
+        ->middleware('can:users.update')
+        ->name('users.update');
+    Route::delete('users/{user}', [UserController::class, 'destroy'])
+        ->middleware('can:users.delete')
+        ->name('users.destroy');
     Route::get('users/{user}/access', [UserAccessController::class, 'edit'])
         ->middleware('can:users.update')
         ->name('users.access.edit');

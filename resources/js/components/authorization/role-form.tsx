@@ -1,6 +1,7 @@
 import { Link, useForm } from '@inertiajs/react';
 import { PermissionGroups } from '@/components/authorization/permission-groups';
 import { SystemRoleBadge } from '@/components/authorization/role-badge';
+import { FormSection } from '@/components/form-section';
 import InputError from '@/components/input-error';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -79,17 +80,11 @@ export function RoleForm({
                 </div>
             )}
 
-            <section className="bg-card rounded-xl border">
-                <header className="space-y-1 border-b px-6 py-4">
-                    <h2 className="text-muted-foreground text-sm font-medium">
-                        Role details
-                    </h2>
-                    <p className="text-muted-foreground text-sm">
-                        How this role appears to people who manage access.
-                    </p>
-                </header>
-
-                <div className="grid gap-2 px-6 py-5 md:max-w-xl">
+            <FormSection
+                title="Role details"
+                description="How this role appears to people who manage access."
+            >
+                <div className="grid gap-2 md:max-w-xl">
                     <Label htmlFor="name">Role name{!readOnly && ' *'}</Label>
                     <div className="flex items-center gap-2">
                         <Input
@@ -114,20 +109,13 @@ export function RoleForm({
                     )}
                     <InputError message={form.errors.name} />
                 </div>
-            </section>
+            </FormSection>
 
-            <section className="bg-card rounded-xl border">
-                <header className="space-y-1 border-b px-6 py-4">
-                    <h2 className="text-muted-foreground text-sm font-medium">
-                        Permissions
-                    </h2>
-                    <p className="text-muted-foreground text-sm">
-                        A role is a set of permissions. Its members inherit
-                        everything selected here.
-                    </p>
-                </header>
-
-                <div className="space-y-4 px-6 py-5">
+            <FormSection
+                title="Permissions"
+                description="A role is a set of permissions. Its members inherit everything selected here."
+            >
+                <div className="space-y-4">
                     <div className="flex flex-wrap items-center justify-between gap-3">
                         <p className="text-sm font-semibold tabular-nums">
                             {form.data.permissions.length} / {allNames.length}{' '}
@@ -171,24 +159,18 @@ export function RoleForm({
                     />
                     <InputError message={form.errors.permissions} />
                 </div>
-            </section>
+            </FormSection>
 
-            <div className="flex gap-2">
-                {readOnly ? (
-                    <Button variant="outline" asChild>
-                        <Link href={cancelHref}>Back to roles</Link>
+            {!readOnly && (
+                <div className="flex gap-2">
+                    <Button type="submit" disabled={form.processing}>
+                        {submitLabel}
                     </Button>
-                ) : (
-                    <>
-                        <Button type="submit" disabled={form.processing}>
-                            {submitLabel}
-                        </Button>
-                        <Button variant="ghost" asChild>
-                            <Link href={cancelHref}>Cancel</Link>
-                        </Button>
-                    </>
-                )}
-            </div>
+                    <Button variant="ghost" asChild>
+                        <Link href={cancelHref}>Cancel</Link>
+                    </Button>
+                </div>
+            )}
         </form>
     );
 }
