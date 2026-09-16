@@ -44,7 +44,8 @@ class ActivityController extends Controller
 
     /**
      * Download the activity the viewer can see, with the current filters, as
-     * CSV. Streamed in chunks so large histories don't load into memory.
+     * CSV (requires activities.export; scope still follows activities.view.all).
+     * Streamed in chunks so large histories don't load into memory.
      */
     public function export(Request $request, ActivityLoggerInterface $activityLogger): StreamedResponse
     {

@@ -13,7 +13,7 @@ see how the codebase evolved. See `docs/architecture.md` for the current map.
 
 ### Added
 
-- **Activity log export:** `GET /activities/export` streams the timeline's current filtered, scoped rows as CSV (`ActivityCsv`, formula-safe) and records an `exported` activity; the page gains an **Export CSV** button.
+- **Activity log export:** `GET /activities/export`, protected by the new `activities.export` permission, streams the timeline's current filtered, scoped rows as CSV (`ActivityCsv`, formula-safe) and records an `exported` activity; the page gains an **Export CSV** button.
 - **Activity log** (`docs/activity-log.md`): single append-only `activities` table, `Auditable` trait + generic `ActivityObserver`, `ActivityLoggerInterface`, login/logout listener, role/permission/password change logging, read-only `/activities` timeline with infinite scroll (cursor pagination, 20 per page), filters and `activities.view.all`; "View activities" in the Users menu.
 - **Guard test** `AuditableModelsTest`: every model must use `Auditable`.
 - **Global search records:** server search for users, roles and permissions (max 5 per group) via `App\Search\SearchProvider` providers and `GET /search`.

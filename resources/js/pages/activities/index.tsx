@@ -17,6 +17,7 @@ import {
     SelectValue,
 } from '@/components/ui/select';
 import { Skeleton } from '@/components/ui/skeleton';
+import { useAuthorization } from '@/hooks/use-authorization';
 import { useQueryFilters } from '@/hooks/use-query-filters';
 import { actionPresentation } from '@/lib/activity-presentation';
 import type { Activity, ActivityFilters } from '@/types';
@@ -64,6 +65,7 @@ export default function Activities({
         filters.from ||
         filters.to,
     );
+    const { can } = useAuthorization();
     const exportUrl = ActivityController.export.url({
         query: Object.fromEntries(
             Object.entries(filters).filter(
@@ -208,13 +210,15 @@ export default function Activities({
                         />
                     </div>
 
-                    <Button variant="outline" asChild>
-                        {/* Plain download link: exports exactly the filters applied above. */}
-                        <a href={exportUrl} download>
-                            <Icon iconNode={Download04Icon} />
-                            Export CSV
-                        </a>
-                    </Button>
+                    {can('activities.export') && (
+                        <Button variant="outline" asChild>
+                            {/* Plain download link: exports exactly the filters applied above. */}
+                            <a href={exportUrl} download>
+                                <Icon iconNode={Download04Icon} />
+                                Export CSV
+                            </a>
+                        </Button>
+                    )}
                 </aside>
 
                 <div className="min-w-0 lg:order-1">

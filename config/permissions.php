@@ -26,7 +26,8 @@ return [
 
     'permissions' => ['view'],
 
-    // Everyone sees their own activity; this unlocks everyone's.
-    'activities' => ['view.all'],
+    // Everyone sees their own activity: view.all unlocks everyone's,
+    // export allows downloading the (scoped, filtered) timeline as CSV.
+    'activities' => ['view.all', 'export'],
 
 ];

@@ -13,6 +13,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
     // activities.view.all (checked in the controller). No write routes exist.
     Route::get('activities', [ActivityController::class, 'index'])->name('activities.index');
     Route::get('activities/export', [ActivityController::class, 'export'])
+        ->middleware('can:activities.export')
         ->middleware('throttle:10,1')
         ->name('activities.export');
 

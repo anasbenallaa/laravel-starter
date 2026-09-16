@@ -15,9 +15,17 @@ test('guests cannot export', function () {
     $this->get(route('activities.export'))->assertRedirect(route('login'));
 });
 
+test('exporting requires the activities.export permission', function () {
+    $viewer = userWithPermissions(['activities.view.all'], 'Auditor');
+
+    $this->actingAs($viewer)->get(route('activities.export'))->assertForbidden();
+
+    expect(Activity::query()->where('action', 'exported')->exists())->toBeFalse();
+});
+
 test('users export only their own activity, even when asking for another user', function () {
-    seedAccessControl();
-    $me = User::factory()->create(['name' => 'Me']);
+    $me = userWithPermissions(['activities.export'], 'Exporter');
+    $me->update(['name' => 'Me']);
     $other = User::factory()->create();
     app(ActivityLoggerInterface::class)->log(action: 'exported', description: 'Mine', actor: $me);
     app(ActivityLoggerInterface::class)->log(action: 'exported', description: 'Theirs', actor: $other);
@@ -38,7 +46,7 @@ test('users export only their own activity, even when asking for another user', 
 });
 
 test('the export applies the same filters as the timeline', function () {
-    $auditor = userWithPermissions(['activities.view.all'], 'Auditor');
+    $auditor = userWithPermissions(['activities.view.all', 'activities.export'], 'Auditor');
     $jane = User::factory()->create(['name' => 'Jane Roe']);
     app(ActivityLoggerInterface::class)->log(action: 'connected', description: 'Connected MeditLink', actor: $jane);
     app(ActivityLoggerInterface::class)->log(action: 'synced', description: 'Synced orders', actor: $jane);
@@ -57,7 +65,7 @@ test('the export applies the same filters as the timeline', function () {
 });
 
 test('exporting is recorded in the activity log without appearing in its own file', function () {
-    $user = User::factory()->create();
+    $user = userWithPermissions(['activities.export'], 'Exporter');
     app(ActivityLoggerInterface::class)->log(action: 'synced', description: 'Synced orders', actor: $user);
 
     $rows = exportCsv($this->actingAs($user)->get(route('activities.export', ['action' => 'synced'])));
@@ -71,7 +79,7 @@ test('exporting is recorded in the activity log without appearing in its own fil
 });
 
 test('values that look like spreadsheet formulas are neutralized', function () {
-    $user = User::factory()->create();
+    $user = userWithPermissions(['activities.export'], 'Exporter');
     app(ActivityLoggerInterface::class)->log(action: 'imported', description: '=HYPERLINK("http://evil.test")', actor: $user);
 
     $rows = exportCsv($this->actingAs($user)->get(route('activities.export', ['action' => 'imported'])));
