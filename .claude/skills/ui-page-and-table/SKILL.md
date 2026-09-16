@@ -19,6 +19,8 @@ Activate this skill **before writing any code** when you:
 
 ## Step 0: read the rules
 
+Also load the `feature-permissions` skill: every page and route needs its permissions declared, enforced and tested.
+
 Read `docs/ui-guidelines.md` in full. It is the source of truth for layout,
 tables, forms, dialogs, icons, colors and permissions. The steps below apply
 those rules; don't deviate from them.

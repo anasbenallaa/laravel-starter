@@ -297,7 +297,7 @@ everywhere:
 - `const { can, canAny } = useAuthorization();` hides UI the user can't use. This is **UX only**; routes and Form Requests must enforce the same permissions (`can:` middleware).
 - **Sidebar:** add a `NavItem` with `permission` (a string, or an array meaning "any of") to `components/app-sidebar.tsx`, under **Workspace** or **Administration**.
 - **Global search:** add the page to `hooks/use-search-items.tsx` with the same `permission`.
-- **New permissions:** add them to `config/permissions.php` (see `docs/authorization.md`).
+- **New permissions (required for every feature):** follow "Every new feature needs permissions" in `docs/authorization.md`. `RoutePermissionsTest` fails when a route isn't protected.
 
 ## 8. Checklist before finishing a page
 

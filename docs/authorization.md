@@ -5,6 +5,12 @@ Role-based access control is built on
 and Laravel's Gate. The system only knows about **users**, **roles** and
 **permission names**. Each module decides which permission its actions need.
 
+> **Required:** every new feature, page, route or controller must declare and
+> enforce its permissions. See
+> [Every new feature needs permissions](#every-new-feature-needs-permissions).
+> `tests/Feature/Authorization/RoutePermissionsTest.php` fails the build when a
+> route isn't protected. AI agents load the `feature-permissions` skill first.
+
 ## Concepts
 
 | Concept         | Where                                           | Notes                                                                                             |
@@ -14,6 +20,42 @@ and Laravel's Gate. The system only knows about **users**, **roles** and
 | Custom roles    | Database                                        | Created at runtime under **Administration → Roles & permissions**. There is no role enum.         |
 | Delegation      | `App\Authorization\PermissionDelegation`        | Non-admins can only grant permissions they hold. Only an Admin can grant or remove Admin.         |
 | Naming rules    | `App\Authorization\PermissionRegistry::PATTERN` | `^[a-z][a-z0-9_]*\.[a-z][a-z0-9_]*$`, e.g. `reports.export` or `purchase_orders.approve`.         |
+
+## Every new feature needs permissions
+
+A feature isn't finished until all of the following are done. Skipping a step
+either leaves the feature open to every signed-in user, or hides it from
+everyone, including roles that should have it.
+
+| #   | Step                                                                                                                                                                                                                                                   | Where                                     |
+| --- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | ----------------------------------------- |
+| 1   | **Choose the permissions.** Use `resource.action`, lowercase snake_case: `view`, `create`, `update`, `delete`, plus specific actions like `approve`, `export` or `connect`. Don't reuse another feature's permission.                                  | Design                                    |
+| 2   | **Register them.** Add `'resource' => [...actions]`. This is the only place permissions are defined.                                                                                                                                                   | `config/permissions.php`                  |
+| 3   | **Sync.** Run `php artisan permissions:sync`; deploys run it automatically. Admin gets the new permissions, and other roles get them from **Roles & permissions**.                                                                                     | CLI                                       |
+| 4   | **Protect every route** with `->middleware('can:resource.action')`. Only when middleware can't express the rule (e.g. "either of two permissions"), authorize in the controller and add the route to `CONTROLLER_AUTHORIZED_ROUTES` in the guard test. | `routes/*.php`                            |
+| 5   | **Authorize again in Form Requests:** `authorize()` returns `$this->user()->can('resource.action')`.                                                                                                                                                   | `app/Http/Requests`                       |
+| 6   | **Use a policy** when access depends on the record (ownership, status, team), starting from the permission: `$user->can('orders.update') && $order->isEditable()`.                                                                                     | `app/Policies`                            |
+| 7   | **Delegation:** if the feature grants or manages access, use `PermissionDelegation` so non-admins can't escalate privileges.                                                                                                                           | `app/Authorization`                       |
+| 8   | **Hide what the user can't use:** `useAuthorization().can('resource.action')` on buttons, menu items and row actions. This is UX only.                                                                                                                 | React                                     |
+| 9   | **Navigation:** sidebar `NavItem` and global search entries get the same `permission`.                                                                                                                                                                 | `app-sidebar.tsx`, `use-search-items.tsx` |
+| 10  | **Tests:** a user with the permission is allowed, a user without it gets 403 for **each** route, and the guard test passes.                                                                                                                            | `tests/Feature`                           |
+
+Never check role names in feature code (`hasRole('Manager')`). Always check
+permissions, so administrators can build any role they need. The only
+role-aware code is the Admin bypass and the delegation rules.
+
+### What the guard test enforces
+
+`RoutePermissionsTest` inspects every authenticated route in the app (package
+sign-in flows like Fortify and passkeys are excluded) and fails when:
+
+- **a route has no `can:` middleware**, unless it's on an explicit allowlist:
+    - `PERSONAL_ROUTES` / `PERSONAL_URIS`: the user's own profile, security settings, notifications and dashboard.
+    - `CONTROLLER_AUTHORIZED_ROUTES`: routes that authorize in the controller; each is also checked to return 403 for a user without permissions.
+- **a route uses a permission that isn't in `config/permissions.php`**, e.g. a typo or a forgotten registration.
+
+Only add a route to an allowlist when it truly acts on the signed-in user's own
+data, and say why in a comment.
 
 ## Adding permissions for a new module
 
