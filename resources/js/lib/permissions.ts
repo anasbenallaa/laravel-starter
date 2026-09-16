@@ -2,7 +2,7 @@
 export const ADMIN_ROLE = 'Admin';
 
 function humanize(value: string): string {
-    return value.replace(/_/g, ' ').trim();
+    return value.replace(/[_.]/g, ' ').trim();
 }
 
 function capitalize(value: string): string {
@@ -19,11 +19,11 @@ export function actionLabel(action: string): string {
     return capitalize(humanize(action));
 }
 
-/** "reports.export" → "Export reports" */
+/** "reports.export" → "Export reports", "activities.view.all" → "View all activities" */
 export function permissionLabel(name: string): string {
-    const [resource = '', action = ''] = name.split('.');
+    const [resource = '', ...action] = name.split('.');
 
-    return capitalize(`${humanize(action)} ${humanize(resource)}`);
+    return capitalize(`${humanize(action.join(' '))} ${humanize(resource)}`);
 }
 
 /** Whether the current user may grant this permission (null = unrestricted). */

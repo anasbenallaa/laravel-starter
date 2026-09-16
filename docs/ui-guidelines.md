@@ -277,6 +277,7 @@ everywhere:
 | Roles & permissions          | `UserShield01Icon`                                      |
 | Manage access                | `UserLock01Icon`                                        |
 | Dashboard                    | `Home09Icon`                                            |
+| Activities                   | `Activity01Icon`                                        |
 
 - Check a name exists before using it: `grep -q "export declare const NameIcon" node_modules/@hugeicons/core-free-icons/dist/types/index.d.ts`.
 - Icon-only buttons need an `aria-label`.

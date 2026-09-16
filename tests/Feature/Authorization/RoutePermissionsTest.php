@@ -29,6 +29,7 @@ const PERSONAL_ROUTES = [
     'security.*',            // own password, 2FA and passkeys
     'user-password.*',       // own password
     'notifications.*',       // own notifications, scoped to the user in the controller
+    'activities.index',      // own activity history; everyone's needs activities.view.all (controller)
 ];
 
 /** Unnamed personal routes, matched by URI. */

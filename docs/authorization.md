@@ -19,7 +19,7 @@ and Laravel's Gate. The system only knows about **users**, **roles** and
 | Admin role      | `App\Authorization\SystemRole::ADMIN`           | Passes every Gate check. Can't be renamed, edited or deleted. There is always at least one Admin. |
 | Custom roles    | Database                                        | Created at runtime under **Administration → Roles & permissions**. There is no role enum.         |
 | Delegation      | `App\Authorization\PermissionDelegation`        | Non-admins can only grant permissions they hold. Only an Admin can grant or remove Admin.         |
-| Naming rules    | `App\Authorization\PermissionRegistry::PATTERN` | `^[a-z][a-z0-9_]*\.[a-z][a-z0-9_]*$`, e.g. `reports.export` or `purchase_orders.approve`.         |
+| Naming rules    | `App\Authorization\PermissionRegistry::PATTERN` | `resource.action` with an optional qualifier, e.g. `reports.export` or `activities.view.all`.     |
 
 ## Every new feature needs permissions
 

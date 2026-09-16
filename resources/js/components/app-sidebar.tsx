@@ -1,9 +1,11 @@
 import {
+    Activity01Icon,
     Home09Icon,
     UserGroupIcon,
     UserShield01Icon,
 } from '@hugeicons/core-free-icons';
 import { Link } from '@inertiajs/react';
+import ActivityController from '@/actions/App/Http/Controllers/ActivityController';
 import RoleController from '@/actions/App/Http/Controllers/Admin/RoleController';
 import UserController from '@/actions/App/Http/Controllers/Admin/UserController';
 import { useState } from 'react';
@@ -40,6 +42,12 @@ export function AppSidebar() {
             title: 'Dashboard',
             href: dashboardUrl,
             icon: Home09Icon,
+        },
+        {
+            // Everyone sees their own history; activities.view.all sees all.
+            title: 'Activities',
+            href: ActivityController.index(),
+            icon: Activity01Icon,
         },
     ];
 

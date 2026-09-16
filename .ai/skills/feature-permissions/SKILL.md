@@ -69,6 +69,11 @@ const { can } = useAuthorization();
 - **Global search:** the same `permission` in `hooks/use-search-items.tsx`.
 - Frontend checks never replace Step 2.
 
+## Step 3b: audit the feature
+
+- **Auditing:** models that users create, change or delete must `use App\Models\Concerns\Auditable`, and set `activityLabel()` (e.g. `"Order {$this->number}"`) and `auditExclude()` for private fields. See `docs/activity-log.md`.
+- **Custom actions:** pivot changes, exports, syncs, integrations and bulk query updates don't fire model events, so log them with `ActivityLoggerInterface::log()`. Don't also log standard model CRUD (the observer already does).
+
 ## Step 4: test (Pest)
 
 For **each** route, test that:
@@ -109,6 +114,7 @@ php artisan test --compact
 - [ ] Form Requests authorize, and policies are used for record-level rules.
 - [ ] No role-name checks in feature code.
 - [ ] UI hides unavailable actions; sidebar and search entries have `permission`.
+- [ ] Changed models use `Auditable`; custom and bulk actions are logged through `ActivityLoggerInterface`.
 - [ ] 403 tests for each route; guard test and full suite green.
 
 ## Common mistakes

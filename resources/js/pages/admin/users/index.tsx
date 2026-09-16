@@ -1,4 +1,5 @@
 import {
+    Activity01Icon,
     Add01Icon,
     Delete02Icon,
     Edit02Icon,
@@ -7,6 +8,7 @@ import {
 } from '@hugeicons/core-free-icons';
 import { Head, Link, router } from '@inertiajs/react';
 import { useState } from 'react';
+import ActivityController from '@/actions/App/Http/Controllers/ActivityController';
 import UserAccessController from '@/actions/App/Http/Controllers/Admin/UserAccessController';
 import UserController from '@/actions/App/Http/Controllers/Admin/UserController';
 import { RoleBadge } from '@/components/authorization/role-badge';
@@ -244,8 +246,9 @@ function UserActions({
     const { can } = useAuthorization();
     const canEdit = can('users.update') && user.can_manage;
     const canDelete = can('users.delete') && user.can_manage && !user.is_self;
+    const canViewActivities = can('activities.view.all');
 
-    if (!canEdit && !canDelete) {
+    if (!canEdit && !canDelete && !canViewActivities) {
         return null;
     }
 
@@ -270,7 +273,21 @@ function UserActions({
                         </Link>
                     </DropdownMenuItem>
                 )}
-                {canEdit && canDelete && <DropdownMenuSeparator />}
+                {canViewActivities && (
+                    <DropdownMenuItem asChild>
+                        <Link
+                            href={ActivityController.index.url({
+                                query: { user: user.id },
+                            })}
+                        >
+                            <Icon iconNode={Activity01Icon} />
+                            View activities
+                        </Link>
+                    </DropdownMenuItem>
+                )}
+                {(canEdit || canViewActivities) && canDelete && (
+                    <DropdownMenuSeparator />
+                )}
                 {canDelete && (
                     <DropdownMenuItem variant="destructive" onSelect={onDelete}>
                         <Icon iconNode={Delete02Icon} />

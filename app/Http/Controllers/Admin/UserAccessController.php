@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Admin;
 
+use App\Actions\Authorization\LogAccessChanges;
 use App\Authorization\PermissionDelegation;
 use App\Authorization\PermissionRegistry;
 use App\Authorization\SystemRole;
@@ -65,11 +66,17 @@ class UserAccessController extends Controller
     /**
      * Replace the user's roles and direct permissions in one transaction.
      */
-    public function update(UpdateUserAccessRequest $request, User $user): RedirectResponse
+    public function update(UpdateUserAccessRequest $request, User $user, LogAccessChanges $log): RedirectResponse
     {
-        DB::transaction(function () use ($request, $user) {
+        DB::transaction(function () use ($request, $user, $log) {
+            $rolesBefore = $user->getRoleNames()->all();
+            $permissionsBefore = $user->getDirectPermissions()->pluck('name')->all();
+
             $user->syncRoles($request->validated('roles'));
             $user->syncPermissions($request->validated('permissions'));
+
+            $log->userRoles($user, $rolesBefore, (array) $request->validated('roles'));
+            $log->userPermissions($user, $permissionsBefore, (array) $request->validated('permissions'));
         });
 
         Inertia::flash('toast', ['type' => 'success', 'message' => __('User access updated successfully.')]);

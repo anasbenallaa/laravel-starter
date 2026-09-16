@@ -16,6 +16,13 @@ export function useQueryFilters<T extends Filters>(
     url: string,
     initial: T,
     debounceMs = 300,
+    /**
+     * For pages with merged props (e.g. an Inertia::scroll infinite list):
+     * `reset` replaces them instead of appending. Inertia sends reset visits
+     * as partial reloads, so list every other prop that depends on the
+     * filters in `only`.
+     */
+    visit: { reset?: string[]; only?: string[] } = {},
 ) {
     const [filters, setFilters] = useState<T>(initial);
     const isFirstRender = useRef(true);
@@ -42,10 +49,15 @@ export function useQueryFilters<T extends Filters>(
                 preserveState: true,
                 preserveScroll: true,
                 replace: true,
+                ...(visit.reset?.length
+                    ? { reset: visit.reset, only: visit.only ?? [] }
+                    : {}),
             });
         }, delay);
 
         return () => clearTimeout(timeout);
+        // `visit` is a stable, per-page configuration.
+        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [filters, url, debounceMs]);
 
     const update = (values: Partial<T>, options: UpdateOptions = {}) => {

@@ -1,4 +1,5 @@
 import {
+    Activity01Icon,
     Home09Icon,
     UserGroupIcon,
     UserShield01Icon,
@@ -12,6 +13,7 @@ import {
 } from '@hugeicons/core-free-icons';
 import { router } from '@inertiajs/react';
 import { useMemo } from 'react';
+import ActivityController from '@/actions/App/Http/Controllers/ActivityController';
 import RoleController from '@/actions/App/Http/Controllers/Admin/RoleController';
 import UserController from '@/actions/App/Http/Controllers/Admin/UserController';
 import type { AppIcon } from '@/components/ui/icon';
@@ -74,6 +76,17 @@ export function useSearchItems(): SearchItem[] {
                     keywords: ['alerts', 'inbox', 'unread', 'bell'],
                     icon: Notification03Icon,
                     href: notificationsIndex().url,
+                },
+                {
+                    id: 'nav.activities',
+                    title: 'Activities',
+                    group: 'Navigation',
+                    badge: 'Navigation',
+                    description:
+                        'History of actions performed in the application',
+                    keywords: ['audit', 'history', 'log', 'timeline'],
+                    icon: Activity01Icon,
+                    href: ActivityController.index.url(),
                 },
                 {
                     id: 'admin.users',

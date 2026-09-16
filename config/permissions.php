@@ -26,4 +26,7 @@ return [
 
     'permissions' => ['view'],
 
+    // Everyone sees their own activity; this unlocks everyone's.
+    'activities' => ['view.all'],
+
 ];

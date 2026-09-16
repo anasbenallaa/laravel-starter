@@ -2,10 +2,12 @@
 
 namespace App\Http\Controllers\Admin;
 
+use App\Actions\Authorization\LogAccessChanges;
 use App\Actions\Users\DeleteUser;
 use App\Authorization\PermissionDelegation;
 use App\Authorization\PermissionRegistry;
 use App\Authorization\SystemRole;
+use App\Contracts\ActivityLoggerInterface;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Admin\StoreUserRequest;
 use App\Http\Requests\Admin\UpdateUserRequest;
@@ -94,13 +96,15 @@ class UserController extends Controller
      * Create a user. Accounts created by an administrator are considered
      * verified, so the new user can sign in straight away.
      */
-    public function store(StoreUserRequest $request): RedirectResponse
+    public function store(StoreUserRequest $request, LogAccessChanges $log): RedirectResponse
     {
-        DB::transaction(function () use ($request) {
-            $user = User::create($request->safe()->only(['name', 'email', 'password']));
-
+        DB::transaction(function () use ($request, $log) {
+            // Built before saving so the observer logs a single "created" entry.
+            $user = new User($request->safe()->only(['name', 'email', 'password']));
             $user->forceFill(['email_verified_at' => now()])->save();
+
             $user->syncRoles($request->validated('roles'));
+            $log->userRoles($user, [], (array) $request->validated('roles'));
         });
 
         Inertia::flash('toast', ['type' => 'success', 'message' => __('User created successfully.')]);
@@ -130,7 +134,7 @@ class UserController extends Controller
     /**
      * Update a user's name, email and (optionally) password.
      */
-    public function update(UpdateUserRequest $request, User $user): RedirectResponse
+    public function update(UpdateUserRequest $request, User $user, ActivityLoggerInterface $activity): RedirectResponse
     {
         $user->fill($request->safe()->only(['name', 'email']));
 
@@ -138,7 +142,15 @@ class UserController extends Controller
             $user->password = (string) $request->validated('password');
         }
 
+        // Name/email changes are logged by the observer; the password never is,
+        // so record that it changed (without any value).
+        $passwordChanged = $user->isDirty('password');
+
         $user->save();
+
+        if ($passwordChanged) {
+            $activity->log(action: 'password_changed', description: "Changed password for {$user->name}", subject: $user);
+        }
 
         Inertia::flash('toast', ['type' => 'success', 'message' => __('User updated successfully.')]);
 

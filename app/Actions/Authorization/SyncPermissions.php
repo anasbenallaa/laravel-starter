@@ -2,8 +2,10 @@
 
 namespace App\Actions\Authorization;
 
+use App\Activity\ActivityAction;
 use App\Authorization\PermissionRegistry;
 use App\Authorization\SystemRole;
+use App\Contracts\ActivityLoggerInterface;
 use Illuminate\Support\Facades\DB;
 use InvalidArgumentException;
 use Spatie\Permission\Models\Permission;
@@ -17,7 +19,10 @@ use Spatie\Permission\PermissionRegistrar;
  */
 class SyncPermissions
 {
-    public function __construct(private PermissionRegistrar $registrar) {}
+    public function __construct(
+        private PermissionRegistrar $registrar,
+        private ActivityLoggerInterface $activity,
+    ) {}
 
     /**
      * @return array{created: int, existing: int, admin_permissions: int}
@@ -55,6 +60,14 @@ class SyncPermissions
         });
 
         $this->registrar->forgetCachedPermissions();
+
+        if ($result['created'] > 0) {
+            $this->activity->log(
+                action: ActivityAction::SYNCED,
+                description: "Synchronized permissions ({$result['created']} created)",
+                metadata: $result,
+            );
+        }
 
         return $result;
     }

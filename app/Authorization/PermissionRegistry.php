@@ -13,10 +13,10 @@ use Spatie\Permission\Models\Permission;
 final class PermissionRegistry
 {
     /**
-     * Lowercase snake_case resource and action separated by one dot:
-     * users.view, reports.export, purchase_orders.approve.
+     * Lowercase snake_case resource and action separated by a dot, with an
+     * optional qualifier: users.view, reports.export, activities.view.all.
      */
-    public const string PATTERN = '/^[a-z][a-z0-9_]*\.[a-z][a-z0-9_]*$/';
+    public const string PATTERN = '/^[a-z][a-z0-9_]*(\.[a-z][a-z0-9_]*){1,2}$/';
 
     /**
      * Actions shown first, in this order, when grouping for the UI.

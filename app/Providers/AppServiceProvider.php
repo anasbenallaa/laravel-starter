@@ -3,8 +3,10 @@
 namespace App\Providers;
 
 use App\Authorization\SystemRole;
+use App\Contracts\ActivityLoggerInterface;
 use App\Contracts\NotificationServiceInterface;
 use App\Models\User;
+use App\Services\ActivityLogger;
 use App\Services\NotificationService;
 use Carbon\CarbonImmutable;
 use Illuminate\Support\Facades\Date;
@@ -23,6 +25,7 @@ class AppServiceProvider extends ServiceProvider
      */
     public array $bindings = [
         NotificationServiceInterface::class => NotificationService::class,
+        ActivityLoggerInterface::class => ActivityLogger::class,
     ];
 
     /**

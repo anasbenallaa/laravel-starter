@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Admin;
 
+use App\Actions\Authorization\LogAccessChanges;
 use App\Authorization\PermissionDelegation;
 use App\Authorization\PermissionRegistry;
 use App\Authorization\SystemRole;
@@ -95,15 +96,18 @@ class RoleController extends Controller
     /**
      * Create a role and grant it the selected permissions.
      */
-    public function store(StoreRoleRequest $request): RedirectResponse
+    public function store(StoreRoleRequest $request, LogAccessChanges $log): RedirectResponse
     {
-        DB::transaction(function () use ($request) {
+        DB::transaction(function () use ($request, $log) {
+            /** @var Role $role */
             $role = Role::create([
                 'name' => $request->validated('name'),
                 'guard_name' => PermissionRegistry::guard(),
             ]);
 
             $role->syncPermissions($request->validated('permissions'));
+
+            $log->roleCreated($role);
         });
 
         Inertia::flash('toast', ['type' => 'success', 'message' => __('Role created successfully.')]);
@@ -135,11 +139,16 @@ class RoleController extends Controller
     /**
      * Rename a role and synchronize its permissions.
      */
-    public function update(UpdateRoleRequest $request, Role $role): RedirectResponse
+    public function update(UpdateRoleRequest $request, Role $role, LogAccessChanges $log): RedirectResponse
     {
-        DB::transaction(function () use ($request, $role) {
+        DB::transaction(function () use ($request, $role, $log) {
+            $nameBefore = $role->name;
+            $permissionsBefore = $role->permissions()->pluck('name')->all();
+
             $role->update(['name' => $request->validated('name')]);
             $role->syncPermissions($request->validated('permissions'));
+
+            $log->roleUpdated($role, $nameBefore, $permissionsBefore);
         });
 
         Inertia::flash('toast', ['type' => 'success', 'message' => __('Role updated successfully.')]);
@@ -150,7 +159,7 @@ class RoleController extends Controller
     /**
      * Delete a custom role; its users lose the permissions it granted.
      */
-    public function destroy(Request $request, Role $role): RedirectResponse
+    public function destroy(Request $request, Role $role, LogAccessChanges $log): RedirectResponse
     {
         if (SystemRole::isSystem($role)) {
             throw ValidationException::withMessages(['role' => __('The Admin role cannot be deleted.')]);
@@ -160,7 +169,10 @@ class RoleController extends Controller
             throw ValidationException::withMessages(['role' => __('You can only delete roles whose permissions you have.')]);
         }
 
-        $role->delete();
+        DB::transaction(function () use ($role, $log) {
+            $log->roleDeleted($role, $role->users()->count());
+            $role->delete();
+        });
 
         Inertia::flash('toast', ['type' => 'success', 'message' => __('Role deleted successfully.')]);
 

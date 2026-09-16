@@ -59,6 +59,10 @@ This project has domain-specific skills available in `**/skills/**`. You MUST ac
 - Register permissions only in `config/permissions.php` (`resource.action`), protect every route with `can:` middleware, authorize in Form Requests, check permissions (never role names), hide unavailable UI with `useAuthorization().can()`, and add 403 tests.
 - `tests/Feature/Authorization/RoutePermissionsTest.php` must stay green; don't allowlist routes to silence it.
 
+## Activity log
+
+- Models users create/change/delete must `use Auditable` (see `docs/activity-log.md`); log pivot, bulk and custom actions (connect, export, sync…) with `ActivityLoggerInterface`, never duplicating observer CRUD. Activities are read-only: never add routes or code that edit or delete them.
+
 === boost rules ===
 
 # Laravel Boost

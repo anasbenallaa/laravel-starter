@@ -28,12 +28,12 @@ test('users with roles.view can list roles with real counts', function () {
             ->where('roles.data.0.name', SystemRole::ADMIN)
             ->where('roles.data.0.is_system', true)
             ->where('roles.data.0.users_count', 2)
-            ->where('roles.data.0.permissions_count', 9)
+            ->where('roles.data.0.permissions_count', 10)
             ->where('roles.data.1.name', 'Viewer')
             ->where('roles.data.1.users_count', 1)
             ->where('roles.data.1.permissions_count', 1)
             ->where('roles.data.1.permissions', ['roles.view'])
-            ->has('permissionGroups', 3),
+            ->has('permissionGroups', 4),
         );
 
     $this->actingAs($viewer)
@@ -96,7 +96,7 @@ test('the admin role cannot be renamed or modified', function () {
         ->assertSessionHasErrors('role');
 
     expect($adminRole->fresh()->name)->toBe(SystemRole::ADMIN)
-        ->and($adminRole->fresh()->permissions()->count())->toBe(9);
+        ->and($adminRole->fresh()->permissions()->count())->toBe(10);
 });
 
 test('custom roles can be deleted but the admin role cannot', function () {
@@ -185,7 +185,7 @@ test('the edit page renders role data and management flags', function () {
             ->where('role.permissions', ['users.view'])
             ->where('canManage', true)
             ->where('delegablePermissions', null)
-            ->has('permissionGroups', 3),
+            ->has('permissionGroups', 4),
         );
 
     $this->actingAs($admin)
