@@ -10,6 +10,21 @@ Auditable model ──► ActivityObserver ──┐
 Controller / service / listener ────────┘
 ```
 
+## Every action needs an activity
+
+This is a project rule. Any page, form, endpoint, job or command that
+**creates, changes or deletes data, or performs an action** must record it
+here:
+
+1. **Models users change:** `use Auditable` plus `activityLabel()`. The observer logs create, update and delete.
+2. **Pivots, bulk queries and non-model actions:** call `ActivityLoggerInterface::log()` once per meaningful change.
+3. **Frontend:** add new custom actions to `resources/js/lib/activity-presentation.ts`.
+4. **Tests:** assert the activity in the feature's tests.
+
+`tests/Feature/Activity/AuditableModelsTest.php` fails when a model in
+`app/Models` doesn't use `Auditable`. Only models users never change may be
+allowlisted there (e.g. `Activity` itself), with a reason.
+
 ## What gets recorded
 
 | Source                                            | Actions                                                                                           | How                                          |

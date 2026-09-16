@@ -210,6 +210,14 @@ ThingsIndex.layout = () => ({
 - **Searchable records:** if users need to find individual records (e.g. an order by number), add an `App\Search\SearchProvider` (see "Global search (records)" in `docs/ui-guidelines.md`). The palette shows at most 5 per group.
 - **Hiding UI:** use `useAuthorization().can()` for buttons and menu items. The server must enforce the same permission.
 
+## Step 4b: activity log (required)
+
+Every create, update, delete or action the page performs must be recorded (see "Activity logging" in `docs/ui-guidelines.md` and `docs/activity-log.md`):
+
+- **Models the form saves:** `use App\Models\Concerns\Auditable;` and `activityLabel()`. Standard CRUD is then logged automatically; don't log it again.
+- **Pivot changes, bulk queries and non-model actions** (export, sync, connect…): `app(ActivityLoggerInterface::class)->log(action: '…', subject: $model, metadata: [...])`. Add the action's verb, icon and color to `resources/js/lib/activity-presentation.ts`.
+- **Tests:** assert the activity in the feature test. `tests/Feature/Activity/AuditableModelsTest.php` must pass.
+
 ## Step 5: icons
 
 - Use HugeIcons only: `import { XIcon } from '@hugeicons/core-free-icons'`, rendered as `<Icon iconNode={XIcon} />` from `@/components/ui/icon`.
@@ -231,3 +239,4 @@ ThingsIndex.layout = () => ({
 - Hiding a button with `can()` but not protecting the route.
 - A "Back" button next to breadcrumbs.
 - Classic Save / Cancel buttons on a form instead of `UnsavedChangesBar`, or the bar never hiding after save on pages that stay open (missing `setDefaults()`).
+- A form or action that changes data without leaving an entry in the activity log (missing `Auditable`, or no `ActivityLoggerInterface` call for pivots, bulk and custom actions).

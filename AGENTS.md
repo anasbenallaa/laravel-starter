@@ -59,9 +59,11 @@ This project has domain-specific skills available in `**/skills/**`. You MUST ac
 - Register permissions only in `config/permissions.php` (`resource.action`), protect every route with `can:` middleware, authorize in Form Requests, check permissions (never role names), hide unavailable UI with `useAuthorization().can()`, and add 403 tests.
 - `tests/Feature/Authorization/RoutePermissionsTest.php` must stay green; don't allowlist routes to silence it.
 
-## Activity log
+## Activity log (required for every action)
 
-- Models users create/change/delete must `use Auditable` (see `docs/activity-log.md`); log pivot, bulk and custom actions (connect, export, sync…) with `ActivityLoggerInterface`, never duplicating observer CRUD. Activities are read-only: never add routes or code that edit or delete them.
+- Every page, form, endpoint, job or command that creates, changes or deletes data, or performs an action (export, import, connect, sync, approve, assign…), must be recorded in the activity log. Follow `docs/activity-log.md` ("Every action needs an activity") and the activity step in the `ui-page-and-table` and `feature-permissions` skills.
+- Models users change `use Auditable` (with `activityLabel()`); pivot, bulk and custom actions are logged with `ActivityLoggerInterface`; never log standard model CRUD twice, and never log secrets.
+- Assert the activity in the feature's tests. `tests/Feature/Activity/AuditableModelsTest.php` must stay green; don't allowlist models to silence it. Activities are read-only: never add routes or code that edit or delete them.
 
 === boost rules ===
 

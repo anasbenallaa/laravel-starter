@@ -200,16 +200,17 @@ Create and edit pages share one form component (e.g. `components/users/user-form
 </form>
 ```
 
-| Rule          | Details                                                                                                                                              |
-| ------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Sections      | Group fields in `FormSection` cards: a muted title and description, then the fields.                                                                 |
-| Field wrapper | `grid content-start gap-2`. `content-start` stops inputs shifting when the field beside them shows an error.                                         |
-| Layout        | Two columns on `md` for short fields, one column for long ones.                                                                                      |
-| Required      | Put `*` in the label.                                                                                                                                |
-| Errors        | `<InputError message={form.errors.field} />` directly under the field. General errors (e.g. `errors.role`) go in a red alert at the top of the form. |
-| Saving        | No Save / Cancel buttons. Use `UnsavedChangesBar` (see below). For read-only views, render no bar.                                                   |
-| Forms         | Inertia `useForm` (or `<Form>`) with Wayfinder URLs, and `preserveScroll: true`.                                                                     |
-| Read-only     | Render the same form with inputs disabled and a short explanation, rather than a separate layout.                                                    |
+| Rule          | Details                                                                                                                                                        |
+| ------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Sections      | Group fields in `FormSection` cards: a muted title and description, then the fields.                                                                           |
+| Field wrapper | `grid content-start gap-2`. `content-start` stops inputs shifting when the field beside them shows an error.                                                   |
+| Layout        | Two columns on `md` for short fields, one column for long ones.                                                                                                |
+| Required      | Put `*` in the label.                                                                                                                                          |
+| Errors        | `<InputError message={form.errors.field} />` directly under the field. General errors (e.g. `errors.role`) go in a red alert at the top of the form.           |
+| Saving        | No Save / Cancel buttons. Use `UnsavedChangesBar` (see below). For read-only views, render no bar.                                                             |
+| Activity log  | What the form saves must appear in `/activities`: an `Auditable` model, or an explicit `ActivityLoggerInterface` entry for pivots and actions (see section 8). |
+| Forms         | Inertia `useForm` (or `<Form>`) with Wayfinder URLs, and `preserveScroll: true`.                                                                               |
+| Read-only     | Render the same form with inputs disabled and a short explanation, rather than a separate layout.                                                              |
 
 ### Unsaved changes bar
 
@@ -315,7 +316,27 @@ everywhere:
     4. Test: matches, the 5-result limit, and that users without the permission don't get the group.
 - **New permissions (required for every feature):** follow "Every new feature needs permissions" in `docs/authorization.md`. `RoutePermissionsTest` fails when a route isn't protected.
 
-## 8. Checklist before finishing a page
+## 8. Activity logging (required)
+
+Every page, form or button that **does something** must leave a trace in the
+activity log (`/activities`). That includes creating, editing and deleting
+records, and actions like export, import, connect, sync, approve or assign.
+Users see their own history there, and administrators see everyone's. See
+`docs/activity-log.md` for the full reference.
+
+| The page…                                                             | Do this                                                                                                                                                                                         |
+| --------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Creates, edits or deletes a model                                     | Add `use Auditable` to the model and give it an `activityLabel()` (e.g. `"Order {$this->number}"`). The observer records `created` / `updated` / `deleted` automatically; don't log them again. |
+| Changes relationships (pivots such as roles, tags, members)           | Log one entry per change with `ActivityLoggerInterface` (`assigned`, `unassigned`…). See `LogAccessChanges`.                                                                                    |
+| Runs an action that isn't a model save (export, sync, connect, send…) | Log it with `ActivityLoggerInterface::log(action: 'exported', …)`, with the record as `subject` when there is one.                                                                              |
+| Updates or deletes many rows with one query                           | Update models one by one, or log one entry describing the bulk change (count and filters).                                                                                                      |
+| Has private or noisy fields                                           | Hide them with `auditExclude()`. Passwords, tokens and secrets are never stored.                                                                                                                |
+
+- **New actions:** give each new action a verb, icon and color in `resources/js/lib/activity-presentation.ts`.
+- **Tests:** assert the activity in the feature test, e.g. `Activity::where('action', 'exported')->sole()`.
+- **Guard test:** `AuditableModelsTest` fails when a model in `app/Models` isn't `Auditable`. Only allowlist a model that users never change, and say why.
+
+## 9. Checklist before finishing a page
 
 - [ ] `<Head title>`, breadcrumbs, `p-4 md:p-6`, and no back button.
 - [ ] Lists use `DataTable`, with server-side search, filters, `SortOrder` and pagination.
@@ -323,6 +344,7 @@ everywhere:
 - [ ] Deletes use `ConfirmDialog`, and success shows a toast.
 - [ ] Only HugeIcons, through `Icon`, following the table above.
 - [ ] Buttons and links hidden with `can()`, and the same permission enforced on the server.
+- [ ] Every create, update, delete and action is recorded in the activity log (`Auditable` model, or `ActivityLoggerInterface`), with a test.
 - [ ] Sidebar and global search entries added if the page is a destination.
 - [ ] Looks right in dark mode and at 390px wide.
 - [ ] `php artisan wayfinder:generate`, `npx vp check --fix`, `npx tsc --noEmit`, `npm run build` and `php artisan test` all pass.

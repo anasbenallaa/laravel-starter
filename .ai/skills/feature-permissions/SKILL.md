@@ -73,6 +73,7 @@ const { can } = useAuthorization();
 
 - **Auditing:** models that users create, change or delete must `use App\Models\Concerns\Auditable`, and set `activityLabel()` (e.g. `"Order {$this->number}"`) and `auditExclude()` for private fields. See `docs/activity-log.md`.
 - **Custom actions:** pivot changes, exports, syncs, integrations and bulk query updates don't fire model events, so log them with `ActivityLoggerInterface::log()`. Don't also log standard model CRUD (the observer already does).
+- **Required for every action:** assert the activity in the feature's tests. `tests/Feature/Activity/AuditableModelsTest.php` fails for models that aren't `Auditable`.
 
 ## Step 4: test (Pest)
 
