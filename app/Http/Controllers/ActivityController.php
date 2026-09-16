@@ -3,20 +3,23 @@
 namespace App\Http\Controllers;
 
 use App\Activity\ActivityAction;
+use App\Activity\ActivityCsv;
+use App\Activity\ActivityFeed;
+use App\Contracts\ActivityLoggerInterface;
 use App\Models\Activity;
 use App\Models\User;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Relations\Relation;
 use Illuminate\Http\Request;
-use Illuminate\Support\Carbon;
 use Illuminate\Support\Str;
 use Inertia\Inertia;
 use Inertia\Response;
+use Symfony\Component\HttpFoundation\StreamedResponse;
 
 /**
- * Read-only activity feed. Every user sees their own activity; users with
- * activities.view.all see everyone's. There are deliberately no store,
- * update or destroy actions: activity history can't be changed.
+ * Read-only activity feed and CSV export. Every user sees their own activity;
+ * users with activities.view.all see everyone's. There are deliberately no
+ * store, update or destroy actions: activity history can't be changed.
  */
 class ActivityController extends Controller
 {
@@ -24,57 +27,58 @@ class ActivityController extends Controller
 
     public function index(Request $request): Response
     {
-        $viewer = $request->user();
-        $canViewAll = $viewer->can('activities.view.all');
-        $filters = $this->filters($request, $canViewAll);
-
-        $activities = Activity::query()
-            ->with('user:id,name,email,avatar_path')
-            // Scope first, on the server: a regular user's ?user= is ignored.
-            ->when(! $canViewAll, fn (Builder $query) => $query->where('user_id', $viewer->id))
-            ->when($canViewAll && $filters['user'], fn (Builder $query) => $query->where('user_id', $filters['user']))
-            ->when($filters['action'], fn (Builder $query, string $action) => $query->where('action', $action))
-            ->when($filters['from'], fn (Builder $query, string $from) => $query->where('created_at', '>=', Carbon::parse($from)->startOfDay()))
-            ->when($filters['to'], fn (Builder $query, string $to) => $query->where('created_at', '<=', Carbon::parse($to)->endOfDay()))
-            ->when($filters['search'] !== '', fn (Builder $query) => $query->where(fn (Builder $query) => $query
-                ->whereLike('description', "%{$filters['search']}%")
-                ->orWhereLike('subject_label', "%{$filters['search']}%")
-                ->when($canViewAll, fn (Builder $query) => $query->orWhereHas('user', fn (Builder $query) => $query
-                    ->whereLike('name', "%{$filters['search']}%")
-                    ->orWhereLike('email', "%{$filters['search']}%")))))
-            // Newest first. Activities are append-only, so id follows creation
-            // time; ordering by the primary key keeps cursor pages stable and fast.
-            ->orderByDesc('id');
+        $feed = ActivityFeed::fromRequest($request);
+        $activities = $feed->query()->with('user:id,name,email,avatar_path');
 
         return Inertia::render('activities/index', [
             'activities' => Inertia::scroll(fn () => $activities
                 ->cursorPaginate(self::PER_PAGE)
                 ->withQueryString()
                 ->through(fn (Activity $activity) => $this->present($activity))),
-            'filters' => $filters,
-            'canViewAll' => $canViewAll,
-            'actions' => $this->actionOptions($canViewAll ? null : $viewer->id),
-            'users' => $canViewAll ? $this->userOptions($filters['user']) : [],
+            'filters' => $feed->filters,
+            'canViewAll' => $feed->canViewAll,
+            'actions' => $this->actionOptions($feed->canViewAll ? null : $feed->viewer->id),
+            'users' => $feed->canViewAll ? $this->userOptions($feed->filters['user']) : [],
         ]);
     }
 
     /**
-     * @return array{search: string, action: string|null, user: int|null, from: string|null, to: string|null}
+     * Download the activity the viewer can see, with the current filters, as
+     * CSV. Streamed in chunks so large histories don't load into memory.
      */
-    private function filters(Request $request, bool $canViewAll): array
+    public function export(Request $request, ActivityLoggerInterface $activityLogger): StreamedResponse
     {
-        $action = $request->query('action');
-        $user = $request->query('user');
-        $date = fn (mixed $value): ?string => is_string($value) && preg_match('/^\d{4}-\d{2}-\d{2}$/', $value) === 1 && strtotime($value) !== false ? $value : null;
+        $feed = ActivityFeed::fromRequest($request);
+        $rows = $feed->query()->count();
 
-        return [
-            'search' => Str::limit(trim((string) $request->query('search', '')), 100, ''),
-            'action' => is_string($action) && preg_match('/^[a-z_]{1,50}$/', $action) === 1 ? $action : null,
-            // Only honoured for users who may see other people's activity.
-            'user' => $canViewAll && is_string($user) && ctype_digit($user) ? (int) $user : null,
-            'from' => $date($request->query('from')),
-            'to' => $date($request->query('to')),
-        ];
+        // Exporting is an action like any other: record it. Logged before the
+        // download starts, so the file doesn't include its own entry.
+        $exportEntry = $activityLogger->log(
+            action: ActivityAction::EXPORTED,
+            description: "Exported {$rows} ".Str::plural('activity', $rows).' to CSV',
+            metadata: ['rows' => $rows, 'filters' => $feed->activeFilters()],
+        );
+
+        return response()->streamDownload(function () use ($feed, $exportEntry) {
+            $output = fopen('php://output', 'w');
+
+            if ($output === false) {
+                return;
+            }
+
+            fputcsv($output, ActivityCsv::HEADERS, escape: '');
+
+            $feed->query()
+                ->with('user:id,name,email')
+                // Exclude the export entry logged above.
+                ->whereKeyNot($exportEntry->id)
+                ->lazyByIdDesc(500)
+                ->each(function (Activity $activity) use ($output) {
+                    fputcsv($output, ActivityCsv::row($activity), escape: '');
+                });
+
+            fclose($output);
+        }, 'activities-'.now()->format('Y-m-d-His').'.csv', ['Content-Type' => 'text/csv; charset=UTF-8']);
     }
 
     /**

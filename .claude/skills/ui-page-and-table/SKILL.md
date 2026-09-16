@@ -19,6 +19,8 @@ Activate this skill **before writing any code** when you:
 
 ## Step 0: read the rules
 
+Load `project-conventions` first: read `docs/architecture.md` and the `[Unreleased]` part of `CHANGELOG.md`.
+
 Also load the `feature-permissions` skill: every page and route needs its permissions declared, enforced and tested.
 
 Read `docs/ui-guidelines.md` in full. It is the source of truth for layout,
@@ -27,13 +29,14 @@ those rules; don't deviate from them.
 
 Then read one existing page of the same kind and copy its structure:
 
-| Building                                        | Reference                                                                                          |
-| ----------------------------------------------- | -------------------------------------------------------------------------------------------------- |
-| Paginated table page                            | `resources/js/pages/admin/users/index.tsx` + `app/Http/Controllers/Admin/UserController.php@index` |
-| Create / edit form                              | `resources/js/pages/admin/users/{create,edit}.tsx` + `resources/js/components/users/user-form.tsx` |
-| Table with view tabs, local rows and group rows | `resources/js/pages/admin/roles/index.tsx`                                                         |
-| Grouped checkbox form                           | `resources/js/components/authorization/role-form.tsx`                                              |
-| Form that stays open after save                 | `resources/js/pages/admin/users/access.tsx`                                                        |
+| Building                                           | Reference                                                                                                    |
+| -------------------------------------------------- | ------------------------------------------------------------------------------------------------------------ |
+| Paginated table page                               | `resources/js/pages/admin/users/index.tsx` + `app/Http/Controllers/Admin/UserController.php@index`           |
+| Create / edit form                                 | `resources/js/pages/admin/users/{create,edit}.tsx` + `resources/js/components/users/user-form.tsx`           |
+| Table with view tabs, local rows and group rows    | `resources/js/pages/admin/roles/index.tsx`                                                                   |
+| Grouped checkbox form                              | `resources/js/components/authorization/role-form.tsx`                                                        |
+| Form that stays open after save                    | `resources/js/pages/admin/users/access.tsx`                                                                  |
+| Infinite timeline, sticky filter panel, CSV export | `resources/js/pages/activities/index.tsx` + `ActivityController`, `App\Activity\ActivityFeed`, `ActivityCsv` |
 
 ## Step 1: backend (controller, routes, requests)
 
@@ -218,13 +221,18 @@ Every create, update, delete or action the page performs must be recorded (see "
 - **Pivot changes, bulk queries and non-model actions** (export, sync, connect…): `app(ActivityLoggerInterface::class)->log(action: '…', subject: $model, metadata: [...])`. Add the action's verb, icon and color to `resources/js/lib/activity-presentation.ts`.
 - **Tests:** assert the activity in the feature test. `tests/Feature/Activity/AuditableModelsTest.php` must pass.
 
+## Step 4c: feeds and exports
+
+- **Feeds and timelines** (not tables): use Inertia `Inertia::scroll(fn () => $query->cursorPaginate(20))` with `<InfiniteScroll data="…">`. The timeline scrolls in the main column; search and filters go in a sticky right panel (`lg:grid-cols-[minmax(0,1fr)_20rem]`, `aside` with `lg:sticky lg:top-20`, on top on mobile). Filter visits pass `useQueryFilters(url, initial, 300, { reset: ['<prop>'], only: [<other filter-dependent props>] })`.
+- **CSV exports:** reuse the page's query class (like `ActivityFeed`) so the export matches the current filters and scope. Stream with `response()->streamDownload` + `lazyByIdDesc(500)`, neutralize formula characters (`=`, `+`, `-`, `@`), throttle the route, and log an `exported` activity. The button is a plain `<a href download>` built from the applied filters.
+
 ## Step 5: icons
 
 - Use HugeIcons only: `import { XIcon } from '@hugeicons/core-free-icons'`, rendered as `<Icon iconNode={XIcon} />` from `@/components/ui/icon`.
 - Follow the icon table in `docs/ui-guidelines.md`.
 - Verify a name exists before using it: `grep -q "export declare const XIcon" node_modules/@hugeicons/core-free-icons/dist/types/index.d.ts`.
 
-## Step 6: verify
+## Step 6: verify and record
 
 1. Write Pest feature tests covering the page render (`assertInertia`), permission denial (403), validation, and each mutation.
 2. Run `php artisan wayfinder:generate --with-form`, `npx vp check --fix`, `npx tsc --noEmit`, `vendor/bin/pint --parallel`, `vendor/bin/phpstan analyse --memory-limit=512M`, `npm run build` and `php artisan test --compact`.
@@ -240,3 +248,4 @@ Every create, update, delete or action the page performs must be recorded (see "
 - A "Back" button next to breadcrumbs.
 - Classic Save / Cancel buttons on a form instead of `UnsavedChangesBar`, or the bar never hiding after save on pages that stay open (missing `setDefaults()`).
 - A form or action that changes data without leaving an entry in the activity log (missing `Auditable`, or no `ActivityLoggerInterface` call for pivots, bulk and custom actions).
+- Finishing without a `CHANGELOG.md` entry (and a `docs/architecture.md` update for new shared pieces).

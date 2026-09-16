@@ -33,4 +33,6 @@ final class ActivityAction
     public const string REVOKED = 'revoked';
 
     public const string SYNCED = 'synced';
+
+    public const string EXPORTED = 'exported';
 }

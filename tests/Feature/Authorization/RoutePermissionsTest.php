@@ -30,6 +30,7 @@ const PERSONAL_ROUTES = [
     'user-password.*',       // own password
     'notifications.*',       // own notifications, scoped to the user in the controller
     'activities.index',      // own activity history; everyone's needs activities.view.all (controller)
+    'activities.export',     // CSV of the same scoped history as activities.index
 ];
 
 /** Unnamed personal routes, matched by URI. */

@@ -1,4 +1,8 @@
-import { Activity01Icon, Search01Icon } from '@hugeicons/core-free-icons';
+import {
+    Activity01Icon,
+    Download04Icon,
+    Search01Icon,
+} from '@hugeicons/core-free-icons';
 import { Head, InfiniteScroll } from '@inertiajs/react';
 import ActivityController from '@/actions/App/Http/Controllers/ActivityController';
 import { ActivityItem } from '@/components/activities/activity-item';
@@ -60,13 +64,50 @@ export default function Activities({
         filters.from ||
         filters.to,
     );
+    const exportUrl = ActivityController.export.url({
+        query: Object.fromEntries(
+            Object.entries(filters).filter(
+                ([, value]) => value !== null && value !== '',
+            ),
+        ),
+    });
+
     return (
         <>
             <Head title="Activities" />
 
-            <div className="flex w-full flex-col gap-4 p-4 md:p-6">
-                <div className="bg-card flex flex-col gap-2 rounded-xl border p-3 md:flex-row md:flex-wrap md:items-center">
-                    <div className="relative flex-1 md:min-w-56">
+            <div className="grid w-full items-start gap-4 p-4 md:p-6 lg:grid-cols-[minmax(0,1fr)_20rem]">
+                {/* Filters: on top on mobile, a sticky panel on the right from lg. */}
+                <aside
+                    aria-label="Activity filters"
+                    className="bg-card flex flex-col gap-3 rounded-xl border p-4 lg:sticky lg:top-20 lg:order-2"
+                >
+                    <div className="flex items-center justify-between">
+                        <h2 className="text-sm font-semibold">Filters</h2>
+                        {isFiltered && (
+                            <Button
+                                variant="ghost"
+                                size="sm"
+                                className="h-7 px-2"
+                                onClick={() =>
+                                    setFilters(
+                                        {
+                                            search: '',
+                                            action: null,
+                                            user: null,
+                                            from: null,
+                                            to: null,
+                                        },
+                                        { immediate: true },
+                                    )
+                                }
+                            >
+                                Clear
+                            </Button>
+                        )}
+                    </div>
+
+                    <div className="relative">
                         <Icon
                             iconNode={Search01Icon}
                             className="text-muted-foreground pointer-events-none absolute top-1/2 left-3 size-4 -translate-y-1/2"
@@ -96,7 +137,7 @@ export default function Activities({
                         }
                     >
                         <SelectTrigger
-                            className="w-full md:w-44"
+                            className="w-full"
                             aria-label="Filter by action"
                         >
                             <SelectValue />
@@ -123,7 +164,7 @@ export default function Activities({
                             }
                         >
                             <SelectTrigger
-                                className="w-full md:w-52"
+                                className="w-full"
                                 aria-label="Filter by user"
                             >
                                 <SelectValue />
@@ -142,7 +183,7 @@ export default function Activities({
                         </Select>
                     )}
 
-                    <div className="flex items-center gap-2">
+                    <div className="grid grid-cols-2 gap-2">
                         <Input
                             type="date"
                             value={current.from ?? ''}
@@ -153,11 +194,7 @@ export default function Activities({
                                 })
                             }
                             aria-label="From date"
-                            className="md:w-40"
                         />
-                        <span className="text-muted-foreground text-xs">
-                            to
-                        </span>
                         <Input
                             type="date"
                             value={current.to ?? ''}
@@ -168,84 +205,74 @@ export default function Activities({
                                 })
                             }
                             aria-label="To date"
-                            className="md:w-40"
                         />
                     </div>
 
-                    {isFiltered && (
-                        <Button
-                            variant="ghost"
-                            size="sm"
-                            onClick={() =>
-                                setFilters(
-                                    {
-                                        search: '',
-                                        action: null,
-                                        user: null,
-                                        from: null,
-                                        to: null,
-                                    },
-                                    { immediate: true },
+                    <Button variant="outline" asChild>
+                        {/* Plain download link: exports exactly the filters applied above. */}
+                        <a href={exportUrl} download>
+                            <Icon iconNode={Download04Icon} />
+                            Export CSV
+                        </a>
+                    </Button>
+                </aside>
+
+                <div className="min-w-0 lg:order-1">
+                    {activities.data.length === 0 ? (
+                        <div className="flex flex-col items-center justify-center gap-3 rounded-xl border border-dashed px-6 py-16 text-center">
+                            <span className="bg-muted flex size-12 items-center justify-center rounded-full">
+                                <Icon
+                                    iconNode={Activity01Icon}
+                                    className="text-muted-foreground size-6"
+                                />
+                            </span>
+                            {isFiltered ? (
+                                <p className="font-medium">
+                                    No activities match these filters.
+                                </p>
+                            ) : (
+                                <div className="space-y-1">
+                                    <p className="font-medium">
+                                        No activities yet
+                                    </p>
+                                    <p className="text-muted-foreground text-sm">
+                                        Activity performed in the application
+                                        will appear here.
+                                    </p>
+                                </div>
+                            )}
+                        </div>
+                    ) : (
+                        <InfiniteScroll
+                            data="activities"
+                            buffer={400}
+                            onlyNext
+                            className="bg-card rounded-xl border p-4 md:p-6"
+                            loading={<TimelineSkeleton />}
+                            next={({ hasNext }) =>
+                                hasNext ? null : (
+                                    <p className="text-muted-foreground/70 pt-2 text-center text-xs">
+                                        You've reached the end of the activity
+                                        history.
+                                    </p>
                                 )
                             }
                         >
-                            Clear
-                        </Button>
+                            <ol aria-label="Activity timeline">
+                                {activities.data.map((activity, index) => (
+                                    <ActivityItem
+                                        key={activity.id}
+                                        activity={activity}
+                                        showEmail={canViewAll}
+                                        isLast={
+                                            index === activities.data.length - 1
+                                        }
+                                    />
+                                ))}
+                            </ol>
+                        </InfiniteScroll>
                     )}
                 </div>
-
-                {activities.data.length === 0 ? (
-                    <div className="flex flex-col items-center justify-center gap-3 rounded-xl border border-dashed px-6 py-16 text-center">
-                        <span className="bg-muted flex size-12 items-center justify-center rounded-full">
-                            <Icon
-                                iconNode={Activity01Icon}
-                                className="text-muted-foreground size-6"
-                            />
-                        </span>
-                        {isFiltered ? (
-                            <p className="font-medium">
-                                No activities match these filters.
-                            </p>
-                        ) : (
-                            <div className="space-y-1">
-                                <p className="font-medium">No activities yet</p>
-                                <p className="text-muted-foreground text-sm">
-                                    Activity performed in the application will
-                                    appear here.
-                                </p>
-                            </div>
-                        )}
-                    </div>
-                ) : (
-                    <InfiniteScroll
-                        data="activities"
-                        buffer={400}
-                        onlyNext
-                        className="bg-card rounded-xl border p-4 md:p-6"
-                        loading={<TimelineSkeleton />}
-                        next={({ hasNext }) =>
-                            hasNext ? null : (
-                                <p className="text-muted-foreground/70 pt-2 text-center text-xs">
-                                    You've reached the end of the activity
-                                    history.
-                                </p>
-                            )
-                        }
-                    >
-                        <ol aria-label="Activity timeline">
-                            {activities.data.map((activity, index) => (
-                                <ActivityItem
-                                    key={activity.id}
-                                    activity={activity}
-                                    showEmail={canViewAll}
-                                    isLast={
-                                        index === activities.data.length - 1
-                                    }
-                                />
-                            ))}
-                        </ol>
-                    </InfiniteScroll>
-                )}
             </div>
         </>
     );

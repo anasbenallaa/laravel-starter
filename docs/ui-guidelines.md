@@ -5,6 +5,8 @@ the reference for page layout, tables, forms, dialogs, icons and permissions
 in the UI. Reuse the shared components listed here; don't restyle them per
 page.
 
+> Where everything lives: [`docs/architecture.md`](architecture.md). What changed: [`CHANGELOG.md`](../CHANGELOG.md).
+>
 > Building a page or table with an AI agent? The `ui-page-and-table` skill
 > (`.ai/skills/ui-page-and-table/SKILL.md`) has step-by-step templates that
 > follow these rules.

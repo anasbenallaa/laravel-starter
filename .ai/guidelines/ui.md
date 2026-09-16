@@ -1,3 +1,9 @@
+## Project conventions (read first)
+
+- Before any change, activate the `project-conventions` skill: read `docs/architecture.md` (structure, design-system building blocks, guard tests) and `CHANGELOG.md`, then load the domain skills.
+- Reuse the design system (`DataTable`, `FormSection` + `UnsavedChangesBar`, `ConfirmDialog`, central `lib/` presentation helpers, HugeIcons); never duplicate components or hardcode per-page styles.
+- Every change adds an entry under `[Unreleased]` in `CHANGELOG.md`; update `docs/architecture.md` when adding areas, shared components, helpers, guard tests, commands or skills.
+
 ## UI pages and tables
 
 - Before creating or restyling any page, table, list, form, dialog or navigation entry in `resources/js`, activate the `ui-page-and-table` skill and follow `docs/ui-guidelines.md`.

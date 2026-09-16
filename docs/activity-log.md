@@ -143,6 +143,15 @@ $activity->log(action: 'bulk_updated', description: "Cancelled {$count} pending 
 - **Loading:** 20 entries at a time with cursor pagination (`Inertia::scroll` + `<InfiniteScroll>`), newest first. Changing a filter resets the list.
 - **Writes:** there are no create, update or delete routes. The `Activity` model throws if it's updated or deleted.
 
+### Layout and CSV export
+
+- **Layout:** the timeline scrolls normally. Search, filters and **Export CSV** sit in a sticky panel on the right (on top on mobile).
+- **Export:** `GET /activities/export` (`activities.export`, throttled to 10 per minute) downloads the rows the viewer can see with the **current filters**, built by the same `App\Activity\ActivityFeed` query as the timeline.
+    - **Streaming:** the file is streamed in chunks of 500 (`lazyByIdDesc`), so large histories don't load into memory.
+    - **Columns:** date, actor, actor email, action, description, subject type/ID/label, changes ("field: old → new"), metadata and IP address. See `App\Activity\ActivityCsv`.
+    - **Formula safety:** values starting with `=`, `+`, `-` or `@` are prefixed with `'`, so spreadsheets never run them.
+    - **Logging:** every export is recorded as an `exported` activity with the row count and filters. The file doesn't include its own entry.
+
 The timeline presentation (verb, icon and color per action) lives in
 `resources/js/lib/activity-presentation.ts`. Add new custom actions there;
 unknown actions fall back to a neutral style.

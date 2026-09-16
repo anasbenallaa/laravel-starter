@@ -23,6 +23,8 @@ Activate **before writing code** when you:
 
 ## Step 0: read
 
+0. Load `project-conventions` first: read `docs/architecture.md` and `CHANGELOG.md`.
+
 1. `docs/authorization.md`, especially **Every new feature needs permissions** and **Security rules**.
 2. `config/permissions.php`, to see the existing resources and naming.
 3. If the feature has UI, also load the `ui-page-and-table` skill.
@@ -48,6 +50,8 @@ Activate **before writing code** when you:
     ```
 
     Only when middleware can't express the rule (e.g. "either of two permissions"), authorize in the controller with `abort_unless($request->user()->canAny([...]), 403)`. Then add the route to `CONTROLLER_AUTHORIZED_ROUTES` in `tests/Feature/Authorization/RoutePermissionsTest.php`.
+
+    **Exports and downloads** use the same permission and scope as the page they export (e.g. `activities.export` applies `ActivityFeed`'s own-or-all scope), are throttled, and log an `exported` activity.
 
 2. **Form Requests:** `authorize()` returns `$this->user()->can('orders.create')`.
 3. **Record-level rules:** use a policy that starts from the permission, e.g. `return $user->can('orders.update') && $order->isEditable();`.
@@ -117,6 +121,7 @@ php artisan test --compact
 - [ ] UI hides unavailable actions; sidebar and search entries have `permission`.
 - [ ] Changed models use `Auditable`; custom and bulk actions are logged through `ActivityLoggerInterface`.
 - [ ] 403 tests for each route; guard test and full suite green.
+- [ ] `CHANGELOG.md` entry added; `docs/architecture.md` updated for new areas.
 
 ## Common mistakes
 
