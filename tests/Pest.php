@@ -1,6 +1,10 @@
 <?php
 
+use App\Contracts\NotificationServiceInterface;
+use App\Models\User;
+use App\Notifications\Data\NotificationData;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Notifications\DatabaseNotification;
 use Tests\TestCase;
 
 /*
@@ -47,4 +51,23 @@ expect()->extend('toBeOne', function () {
 function something()
 {
     // ..
+}
+
+/**
+ * Send an application notification to the user and return the stored row.
+ *
+ * @param  array<string, mixed>  $overrides  NotificationData constructor arguments.
+ */
+function notifyUser(User $user, array $overrides = []): DatabaseNotification
+{
+    $existing = $user->notifications()->pluck('id')->all();
+
+    app(NotificationServiceInterface::class)->send($user, new NotificationData(...[
+        'event' => 'system.test',
+        'title' => 'Test notification',
+        'message' => 'Something happened.',
+        ...$overrides,
+    ]));
+
+    return $user->notifications()->whereKeyNot($existing)->firstOrFail();
 }

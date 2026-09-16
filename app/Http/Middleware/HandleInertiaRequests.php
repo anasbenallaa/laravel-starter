@@ -2,6 +2,7 @@
 
 namespace App\Http\Middleware;
 
+use App\Http\Resources\NotificationResource;
 use Illuminate\Http\Request;
 use Inertia\Middleware;
 
@@ -42,6 +43,30 @@ class HandleInertiaRequests extends Middleware
                 'user' => $request->user(),
             ],
             'sidebarOpen' => ! $request->hasCookie('sidebar_state') || $request->cookie('sidebar_state') === 'true',
+            'notificationSummary' => fn () => $this->notificationSummary($request),
+        ];
+    }
+
+    /**
+     * Header bell data: the unread count plus a handful of recent items.
+     * Resolved lazily, so partial reloads that don't ask for it skip both
+     * queries. The full list lives on the paginated notifications page.
+     *
+     * @return array{unreadCount: int, recent: array<int, mixed>}|null
+     */
+    protected function notificationSummary(Request $request): ?array
+    {
+        $user = $request->user();
+
+        if (! $user) {
+            return null;
+        }
+
+        return [
+            'unreadCount' => $user->unreadNotifications()->count(),
+            'recent' => NotificationResource::collection(
+                $user->notifications()->limit(5)->get(),
+            )->resolve($request),
         ];
     }
 }

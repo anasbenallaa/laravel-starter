@@ -2,6 +2,7 @@ import {
     Home09Icon,
     Logout01Icon,
     Moon02Icon,
+    Notification03Icon,
     Settings01Icon,
     Shield01Icon,
     Sun03Icon,
@@ -12,6 +13,7 @@ import { useMemo } from 'react';
 import type { AppIcon } from '@/components/ui/icon';
 import { useAppearance } from '@/hooks/use-appearance';
 import { dashboard, logout } from '@/routes';
+import { index as notificationsIndex } from '@/routes/notifications';
 import { edit as editProfile } from '@/routes/profile';
 import { edit as editSecurity } from '@/routes/security';
 
@@ -53,6 +55,16 @@ export function useSearchItems(): SearchItem[] {
                 keywords: ['home', 'overview', 'start'],
                 icon: Home09Icon,
                 href: dashboard().url,
+            },
+            {
+                id: 'nav.notifications',
+                title: 'Notifications',
+                group: 'Navigation',
+                badge: 'Navigation',
+                description: 'View and manage your notifications',
+                keywords: ['alerts', 'inbox', 'unread', 'bell'],
+                icon: Notification03Icon,
+                href: notificationsIndex().url,
             },
             {
                 id: 'nav.profile',

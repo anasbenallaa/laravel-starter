@@ -160,20 +160,23 @@ export function GlobalSearch({
         node?.scrollIntoView({ block: 'nearest' });
     }, [activeIndex]);
 
-    const runItem = useCallback((item: SearchItem | undefined) => {
-        if (!item) {
-            return;
-        }
+    const runItem = useCallback(
+        (item: SearchItem | undefined) => {
+            if (!item) {
+                return;
+            }
 
-        setOpen(false);
+            setOpen(false);
 
-        if (item.href) {
-            router.visit(item.href);
-            return;
-        }
+            if (item.href) {
+                router.visit(item.href);
+                return;
+            }
 
-        item.onSelect?.();
-    }, [setOpen]);
+            item.onSelect?.();
+        },
+        [setOpen],
+    );
 
     const onInputKeyDown = (event: React.KeyboardEvent<HTMLInputElement>) => {
         if (event.key === 'ArrowDown') {
@@ -216,9 +219,7 @@ export function GlobalSearch({
                         <input
                             ref={inputRef}
                             value={query}
-                            onChange={(event) =>
-                                setQuery(event.target.value)
-                            }
+                            onChange={(event) => setQuery(event.target.value)}
                             onKeyDown={onInputKeyDown}
                             placeholder="Search resources, paths, everything…"
                             className="placeholder:text-muted-foreground h-14 flex-1 bg-transparent text-sm outline-none"
@@ -254,8 +255,7 @@ export function GlobalSearch({
                                         const index = flat.findIndex(
                                             (entry) => entry.id === item.id,
                                         );
-                                        const isActive =
-                                            index === activeIndex;
+                                        const isActive = index === activeIndex;
 
                                         return (
                                             <button
@@ -265,9 +265,7 @@ export function GlobalSearch({
                                                 onMouseMove={() =>
                                                     setActiveIndex(index)
                                                 }
-                                                onClick={() =>
-                                                    runItem(item)
-                                                }
+                                                onClick={() => runItem(item)}
                                                 className={cn(
                                                     'flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-left transition-colors',
                                                     isActive
@@ -293,9 +291,7 @@ export function GlobalSearch({
                                                     </span>
                                                 </span>
                                                 <Icon
-                                                    iconNode={
-                                                        ArrowRight01Icon
-                                                    }
+                                                    iconNode={ArrowRight01Icon}
                                                     className="text-muted-foreground/50 size-4 shrink-0"
                                                 />
                                             </button>

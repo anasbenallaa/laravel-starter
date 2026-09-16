@@ -2,6 +2,8 @@
 
 namespace App\Providers;
 
+use App\Contracts\NotificationServiceInterface;
+use App\Services\NotificationService;
 use Carbon\CarbonImmutable;
 use Illuminate\Support\Facades\Date;
 use Illuminate\Support\Facades\DB;
@@ -11,6 +13,15 @@ use Illuminate\Validation\Rules\Password;
 
 class AppServiceProvider extends ServiceProvider
 {
+    /**
+     * All of the container bindings that should be registered.
+     *
+     * @var array<class-string, class-string>
+     */
+    public array $bindings = [
+        NotificationServiceInterface::class => NotificationService::class,
+    ];
+
     /**
      * Register any application services.
      */
